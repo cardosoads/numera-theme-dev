@@ -1,0 +1,179 @@
+#!/usr/bin/env php
+<?php
+// Make sure this script is being run over the PHP CLI!
+if ('cli' !== php_sapi_name()) {
+	return;
+}
+
+require_once __DIR__ . '/../index.php';
+
+use function PhpcsChanged\{
+	printHelp,
+	printVersion,
+	printErrorAndExit,
+	getDebug,
+	runManualWorkflow,
+	runSvnWorkflow,
+	runGitWorkflow,
+	reportMessagesAndExit,
+	fileHasValidExtension,
+	shouldIgnorePath,
+	printInstalledCodingStandards
+};
+use PhpcsChanged\UnixShell;
+use PhpcsChanged\CacheManager;
+use PhpcsChanged\FileCache;
+use PhpcsChanged\CliOptions;
+use PhpcsChanged\InvalidOptionException;
+use PhpcsChanged\Modes;
+
+$optind = 0;
+$options = getopt(
+	'hsi',
+	[
+		'help',
+		'version',
+		'diff:',
+		'phpcs-path:',
+		'git-path:',
+		'cat-path:',
+		'svn-path:',
+		'phpcs-orig:',
+		'phpcs-unmodified:',
+		'phpcs-new:',
+		'phpcs-modified:',
+		'svn',
+		'git',
+		'git-unstaged',
+		'git-staged',
+		'git-branch:',
+		'git-base:',
+		'standard:',
+		'extensions:',
+		'report:',
+		'debug',
+		'ignore:',
+		'no-vendor-phpcs',
+		'cache',
+		'no-cache',
+		'clear-cache',
+		'arc-lint',
+		'always-exit-zero',
+		'no-cache-git-root',
+		'no-verify-git-file',
+		'warning-severity:',
+		'error-severity:',
+	],
+	$optind
+);
+
+$fileNames = array_slice($argv, $optind);
+$fileNamesExpanded = [];
+foreach( $fileNames as $file ) {
+	if (is_dir($file)) {
+		if (shouldIgnorePath($file, isset($options['ignore']) && is_string($options['ignore']) ? $options['ignore'] : null)) {
+			continue;
+		}
+		$iterator = new \RecursiveIteratorIterator(new \RecursiveCallbackFilterIterator(new \RecursiveDirectoryIterator($file, (\RecursiveDirectoryIterator::SKIP_DOTS | \FilesystemIterator::FOLLOW_SYMLINKS)), function($file, $key, $iterator) use($options) {
+			if ($file->isFile() && !fileHasValidExtension($file, isset($options['extensions']) && is_string($options['extensions']) ? $options['extensions'] : '')) {
+				return false;
+			}
+			return $iterator->hasChildren() || $file->isFile() ? true : false;
+		}));
+		foreach ($iterator as $file) {
+			if (shouldIgnorePath($file->getPathName(), isset($options['ignore']) && is_string($options['ignore']) ? $options['ignore'] : null)) {
+				continue;
+			}
+			$fileNamesExpanded[] = $file->getPathName();
+		}
+	} elseif (!shouldIgnorePath($file, isset($options['ignore']) && is_string($options['ignore']) ? $options['ignore'] : null)) {
+		$fileNamesExpanded[] = $file;
+	}
+}
+
+if (isset($options['h']) || isset($options['help'])) {
+	printHelp();
+	exit(0);
+}
+
+if (isset($options['version'])) {
+	printVersion();
+}
+
+if (isset($options['i'])) {
+	$cliOptions = CliOptions::fromArray($options);
+	$shell = new UnixShell($cliOptions);
+	printInstalledCodingStandards($shell);
+}
+
+// --git-branch exists for compatibility, --git-base supports branches
+if (isset($options['git-branch'])) {
+	$options['git-base'] = $options['git-branch'];
+	unset($options['git-branch']);
+}
+
+// --arc-lint is a shorthand for several other options
+if (isset($options['arc-lint'])) {
+	$options['no-verify-git-file'] = 1;
+	$options['always-exit-zero'] = 1;
+	unset($options['arc-lint']);
+}
+
+if (isset($options['phpcs-orig'])) {
+	$options['phpcs-unmodified'] = $options['phpcs-orig'];
+	unset($options['phpcs-orig']);
+}
+if (isset($options['phpcs-new'])) {
+	$options['phpcs-modified'] = $options['phpcs-new'];
+	unset($options['phpcs-new']);
+}
+
+$options['files'] = $fileNamesExpanded;
+
+$debug = getDebug(isset($options['debug']));
+run($options, $debug);
+
+function run(array $rawOptions, callable $debug): void {
+	$debug('Options: ' . json_encode($rawOptions));
+	try {
+		$options = CliOptions::fromArray($rawOptions);
+	} catch ( InvalidOptionException $err ) {
+		printErrorAndExit($err->getMessage());
+		exit(1);
+	}
+	$debug('Running on filenames: ' . implode(', ', $options->files));
+
+	if ($options->mode === Modes::MANUAL) {
+		$shell = new UnixShell($options);
+		reportMessagesAndExit(
+			runManualWorkflow($options->diffFile, $options->phpcsUnmodified, $options->phpcsModified),
+			$options,
+			$shell
+		);
+		return;
+	}
+
+	if ($options->mode === Modes::SVN) {
+		$shell = new UnixShell($options);
+		reportMessagesAndExit(
+			runSvnWorkflow($options->files, $options, $shell, new CacheManager(new FileCache(), $debug), $debug),
+			$options,
+			$shell
+		);
+		return;
+	}
+
+	if ($options->isGitMode()) {
+		$shell = new UnixShell($options);
+		reportMessagesAndExit(
+			runGitWorkflow($options, $shell, new CacheManager(new FileCache(), $debug), $debug),
+			$options,
+			$shell
+		);
+		return;
+	}
+
+	printHelp();
+	exit(1);
+}
+

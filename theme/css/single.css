@@ -1,0 +1,68 @@
+.bg-impressao {
+    background: #FF8080 !important;
+}
+
+.bg-motivacao {
+    background: #8080FF !important;
+}
+
+.bg-expressao {
+    background: #80FFFF !important;
+}
+
+.item {
+    background: #e2e8f0;
+    min-width: 20px;
+    /*min-height: 100%;*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.5;
+    /* Adiciona uma linha base consistente para alinhamento */
+    border-radius: 25%;
+    box-shadow: 0px 0px 3px dimgray;
+}
+
+/* Tabs */
+.tab-menu {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.tab-link {
+    background-color: #f1f1f1;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.tab-link.active {
+    background-color: #ddd;
+}
+
+.piramide-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.linha {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0px;
+}
+
+.num-piramide {
+    padding-right: 5px;
+    padding-left: 5px;
+    font-size: 12px;
+    text-align: center;
+}
+
+#myModal {
+    display: none; /* Modal escondido inicialmente */
+}
+
