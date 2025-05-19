@@ -154,6 +154,8 @@ function numera_theme_scripts()
 
 	wp_enqueue_script('mobile-toggle-off-canvas', get_theme_file_uri() . '/js/mobile-toggle-off-canvas.js', 10);
 
+    
+
 	if (is_singular() && comments_open() && get_option('thread_comments')) {
 		wp_enqueue_script('comment-reply');
 	}
@@ -603,3 +605,221 @@ function custom_lostpassword_ajax() {
 // 3. Registrar os hooks fora de qualquer template
 add_action('wp_ajax_nopriv_custom_lostpassword', 'custom_lostpassword_ajax');
 add_action('wp_ajax_custom_lostpassword',      'custom_lostpassword_ajax');
+function bloquear_acesso_frontend_para_administradores() {
+    // Só aplicar para usuários logados com papel 'administrator'
+    if (
+        is_user_logged_in() && 
+        current_user_can('administrator') && 
+        !is_admin() && 
+        !wp_doing_ajax()
+    ) {
+        // Redireciona para o painel admin
+        wp_redirect(admin_url());
+        exit;
+    }
+}
+add_action('template_redirect', 'bloquear_acesso_frontend_para_administradores');
+
+// 1. Cria o papel "admin_system" com as capacidades de "administrator"
+function criar_papel_admin_system() {
+    if (!get_role('admin_system')) {
+        add_role('admin_system', 'Administrador do Sistema', get_role('administrator')->capabilities);
+    }
+
+    // Garante que o papel tem as capacidades necessárias
+    $role = get_role('admin_system');
+    if ($role) {
+        $role->add_cap('list_users');
+        $role->add_cap('edit_users');
+        $role->add_cap('create_users');
+        $role->add_cap('delete_users');
+        $role->add_cap('promote_users');
+        $role->add_cap('remove_users');
+    }
+}
+add_action('init', 'criar_papel_admin_system');
+
+
+// 2. Redireciona do front-end para o painel
+function bloquear_acesso_frontend_para_admin_system() {
+    if (
+        is_user_logged_in() &&
+        current_user_can('admin_system') &&
+        !is_admin() &&
+        !wp_doing_ajax()
+    ) {
+        wp_redirect(admin_url());
+        exit;
+    }
+}
+add_action('template_redirect', 'bloquear_acesso_frontend_para_admin_system');
+
+// 3. Remove menus do admin para admin_system
+function remover_menus_para_admin_system() {
+    if (current_user_can('admin_system')) {
+        remove_menu_page('edit.php');                   // Posts
+        remove_menu_page('upload.php');                 // Mídia
+        remove_menu_page('edit.php?post_type=page');    // Páginas
+        remove_menu_page('edit-comments.php');          // Comentários
+        remove_menu_page('themes.php');                 // Aparência
+        remove_menu_page('plugins.php');                // Plugins
+        remove_menu_page('simple_history_admin_menu_page');                  // Usuários
+        remove_menu_page('tools.php');                  // Ferramentas
+        remove_menu_page('options-general.php');        // Configurações
+		remove_menu_page('wpstg_clone');      // WP Staging
+        remove_menu_page('edit.php?post_type=acf-field-group'); // ACF
+        remove_menu_page(menu_slug: 'integromat');      // Make (se for o slug correto)
+        remove_menu_page(menu_slug: 'full-connection');      // Make (se for o slug correto)
+		remove_menu_page('edit.php?post_type=mapas');
+		remove_menu_page('edit.php?post_type=textos-do-site');
+		remove_menu_page('edit.php?post_type=placas');
+		remove_menu_page('edit.php?post_type=empresarial');
+		remove_menu_page('edit.php?post_type=enderecos');
+		remove_menu_page('edit.php?post_type=assinatura');
+     // WP Rocket
+    }
+}
+add_action('admin_menu', 'remover_menus_para_admin_system', 999);
+
+// 4. Impede acessos diretos às páginas bloqueadas
+function bloquear_acessos_diretos_para_admin_system() {
+    if (
+        current_user_can('admin_system') &&
+        is_admin() &&
+        !defined('DOING_AJAX')
+    ) {
+        $telas_bloqueadas = [
+            'plugins.php',
+            'themes.php',
+            // 'users.php', era aqui porém eu ainda consigo editar o Admininstrador padrão
+            'tools.php',
+            'options-general.php',
+            'edit.php',
+            'upload.php',
+            'edit-comments.php',
+        ];
+
+        $pagina_atual = basename($_SERVER['PHP_SELF']);
+        if (in_array($pagina_atual, $telas_bloqueadas)) {
+            wp_die('Você não tem permissão para acessar esta página.');
+        }
+    }
+}
+add_action('admin_init', 'bloquear_acessos_diretos_para_admin_system');
+function restringir_acoes_em_administradores($allcaps, $caps, $args, $user) {
+    // Verifica se está tentando editar algum usuário
+    if (isset($args[2])) {
+        $target_user = get_userdata($args[2]);
+
+        // Se o usuário de destino for um administrador padrão
+        if ($target_user && in_array('administrator', $target_user->roles)) {
+            // E se quem está tentando editar é um admin_system
+            if (in_array('admin_system', $user->roles)) {
+                foreach (['edit_user', 'delete_user', 'remove_user', 'promote_user'] as $cap) {
+                    if (in_array($cap, $caps)) {
+                        $allcaps[$cap] = false;
+                    }
+                }
+            }
+        }
+    }
+
+    return $allcaps;
+}
+add_filter('user_has_cap', 'restringir_acoes_em_administradores', 10, 4);
+function ocultar_administradores_na_lista($query) {
+    if (!current_user_can('administrator') && is_admin() && $query->get('post_type') === '') {
+        global $pagenow;
+        if ($pagenow == 'users.php') {
+            $meta_query = [
+                [
+                    'key'     => $query->get('meta_key'),
+                    'value'   => 'administrator',
+                    'compare' => 'NOT LIKE'
+                ]
+            ];
+            $query->set('meta_query', $meta_query);
+        }
+    }
+}
+add_action('pre_get_users', 'ocultar_administradores_na_lista');
+function bloquear_edicao_administrador_padrao() {
+    if (
+        is_admin() &&
+        current_user_can('admin_system') &&
+        isset($_GET['user_id'])
+    ) {
+        $user_id = intval($_GET['user_id']);
+        $target_user = get_userdata($user_id);
+
+        if ($target_user && in_array('administrator', $target_user->roles)) {
+            wp_die('Você não tem permissão para editar este usuário.');
+        }
+    }
+}
+add_action('admin_init', 'bloquear_edicao_administrador_padrao');
+function remover_menu_novo_admin_bar($wp_admin_bar) {
+    if (current_user_can('admin_system')) {
+        $wp_admin_bar->remove_node('new-content'); // Remove o menu "Novo"
+        $wp_admin_bar->remove_node('comments'); // Remove o menu "Novo"
+        $wp_admin_bar->remove_node('simple-history'); // Remove o menu "Novo"
+    }
+}
+add_action('admin_bar_menu', 'remover_menu_novo_admin_bar', 999);
+
+remove_action('admin_notices', 'fc-notice');
+function esconder_notice_fc_com_js() {
+    if (current_user_can('admin_system')) {
+        ?>
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var aviso = document.getElementById('fc-notice');
+            if (aviso) {
+                aviso.style.display = 'none';
+            }
+        });
+        </script>
+        <?php
+    }
+}
+add_action('admin_footer', 'esconder_notice_fc_com_js');
+
+// functions.php
+
+// 1) Função que processa a exclusão via AJAX
+add_action('wp_ajax_delete_endereco_via_ajax', 'delete_endereco_via_ajax');
+function delete_endereco_via_ajax() {
+    // Verifica nonce
+    if (
+        empty($_POST['nonce']) ||
+        !wp_verify_nonce($_POST['nonce'], 'delete_item_' . intval($_POST['item_id']))
+    ) {
+        wp_send_json_error(['message' => 'Falha ao validar segurança.']);
+    }
+
+    $post_id = intval($_POST['item_id']);
+    // Tenta apagar o post (endereços)
+    $deleted = wp_delete_post($post_id, true);
+
+    if ($deleted) {
+        wp_send_json_success(['message' => 'Item removido com sucesso.']);
+    } else {
+        wp_send_json_error(['message' => 'Não foi possível remover o item.']);
+    }
+}
+
+// 2) Enfileirar o script JavaScript
+add_action('wp_enqueue_scripts', function() {
+    wp_enqueue_script(
+        'listagem-enderecos-ajax',
+        get_stylesheet_directory_uri() . '/js/listagem-enderecos-ajax.js',
+        ['jquery'],
+        '1.0',
+        true
+    );
+    // Passa a URL do AJAX e o nonce base
+    wp_localize_script('listagem-enderecos-ajax', 'ListagemEnderecosAjax', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+        // O nonce vai ser gerado dinamicamente dentro de cada form, veja abaixo.
+    ]);
+});

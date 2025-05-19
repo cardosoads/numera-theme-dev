@@ -55,10 +55,9 @@ $profile_picture = get_user_meta($user_id, 'profile_picture', true);
 
 <!-- Sidebar Menu (Fixo no Desktop, Off-Canvas no Mobile) -->
 <div id="offcanvas-backdrop" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden lg:hidden"></div>
-<div id="offcanvas-menu" class="fixed lg:relative inset-y-0 left-0 w-64 bg-white flex flex-col justify-between h-full shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-50">
-    <div>
+<div id="offcanvas-menu" class="fixed lg:relative inset-y-0 left-0 w-64 flex flex-col justify-between  h-full shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-50" style="background-color:#43265F!important">    <div>
         <button id="close-menu" class="text-black p-4 focus:outline-none lg:hidden">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg class="w-6 h-6" fill="none" stroke="white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
@@ -144,11 +143,12 @@ $profile_picture = get_user_meta($user_id, 'profile_picture', true);
     <div class="container mx-auto p-2">
         <div class="text-center bg-white rounded shadow-md text-2xl flex flex-col">
             <!-- Link de Suporte -->
-            <a class="text-sm link-kdevs p-2 text-gray-300"
+            <a class="text-sm p-2 text-cor-numera"
                href="https://lojaterapiasdeluz.com.br/comunidadenumera/"
                target="_blank"
                rel="noopener">
                 Suporte
+                <img src="<?php echo get_stylesheet_directory_uri() . '/images/whatsapp.png'; ?>" alt="WhatsApp" class="w-4 h-4 inline-block ml-1">
             </a>
         </div>
 
@@ -187,15 +187,7 @@ $profile_picture = get_user_meta($user_id, 'profile_picture', true);
 
 <style>
     /* CSS para mobile */
-    @media (max-width: 1024px) {
-        #offcanvas-menu {
-            transform: -translate-x-full;
-        }
-
-        #offcanvas-backdrop {
-            display: block;
-        }
-    }
+    
 
     /* CSS para desktop */
     @media (min-width: 1025px) {
