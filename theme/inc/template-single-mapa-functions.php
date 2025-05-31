@@ -180,8 +180,10 @@ $piramide_vida = $numerologia->calcularPiramdeVida($nome_completo);
 $ultimo_array_piramide_vida = end($piramide_vida);
 $sequencia_piramide_vida = $numerologia->sequenciaVibracional($piramide_vida);
 $sequencias_vida = $numerologia->sequenciasEncontradas($sequencia_piramide_vida);
-
-
+// echo '<pre>';
+// var_dump($sequencias_vida);
+// echo '</pre>';
+// die();
 $piramide_pessoal = $numerologia->calcularPiramdePessoal($nome_completo, $data_nascimento);
 $ultimo_array_piramide_pessoal = end($piramide_pessoal);
 $sequencia_piramide_pessoal = $numerologia->sequenciaVibracional($piramide_pessoal);

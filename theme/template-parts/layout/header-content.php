@@ -216,6 +216,7 @@ $profile_picture = get_user_meta($user_id, 'profile_picture', true);
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
             top: 0; /* Posiciona no topo */
             height: 90px; /* Defina a altura do masthead */
+            z-index: 9999;
         }
 
         /* Ajuste do content para seguir o tamanho do off-canvas */

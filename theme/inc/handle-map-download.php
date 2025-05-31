@@ -1,10 +1,6 @@
 <?php
-include_once get_template_directory() . '/helpers/docx_download.php';
-use PhpOffice\PhpWord\PhpWord;
-use PhpOffice\PhpWord\Style\Paragraph;
+include_once get_stylesheet_directory() . '/helpers/docx-download.php';
 use PhpOffice\PhpWord\SimpleType\Jc;
-use PhpOffice\PhpWord\Style\Font;
-use PhpOffice\PhpWord\Style\Align;
 function gerar_docx_com_infos()
 {
     if (isset($_GET['download_docx'])) {

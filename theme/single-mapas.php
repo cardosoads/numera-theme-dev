@@ -1280,12 +1280,12 @@ get_header();
                                         <h2 class="text-xl font-semibold text-gray-800 mb-4">Sequências Vida</h2>
                                         <ul class="text-sm text-gray-700 space-y-4">
                                             <?php foreach ($sequencias_pessoal as $tipo => $sequencias): ?>
-                                                <li class="border-b border-gray-200 pb-2">
-                                                    <h3 class="text-lg font-medium text-gray-600 mb-2"><?php echo ucfirst($tipo); ?></h3>
-                                                    <ul class="ml-4 flex gap-4 items-center">
-                                                        <?php foreach ($sequencias as $sequencia): ?>
-                                                            <?php
-                                                            // Determina qual array usar e busca o texto correspondente
+                                                <?php if (!empty($sequencias)): ?>
+                                                    <li class="border-b border-gray-200 pb-2">
+                                                        <h3 class="text-lg font-medium text-gray-600 mb-2"><?php echo ucfirst($tipo); ?></h3>
+                                                        <ul class="ml-4 flex gap-4 items-center">
+                                                            <?php foreach ($sequencias as $sequencia): ?>
+                                                                <?php
                                                             $texto_sequencia = '';
                                                             if ($tipo === 'positivas') {
                                                                 foreach ($sequencias_positivas_options as $opcao) {
@@ -1299,23 +1299,25 @@ get_header();
                                                                     if ($opcao['numero_sequencia_negativa'] === $sequencia) {
                                                                         $texto_sequencia = $opcao['sequencia_negativa'];
                                                                         break;
+                                                                            break;
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
-                                                            ?>
-                                                            <li>
-                                                                <?php $id = "modal-pessoal-$tipo-$sequencia"; ?>
-                                                                <a
+                                                                ?>
+                                                                <li>
+                                                                    <?php $id = "modal-pessoal-$tipo-$sequencia"; ?>
+                                                                    <a
                                                                         href="<?php echo $id; ?>"
                                                                         class="text-cor-numera hover:text-[#D6C8E3] font-medium"
                                                                         data-modal-target="<?php echo $id; ?>">
-                                                                    <?php echo $sequencia; ?>
-                                                                </a>
-                                                                <?php echo rende_sequences_modal($id, $sequencia, $texto_sequencia); ?>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </li>
+                                                                        <?php echo $sequencia; ?>
+                                                                    </a>
+                                                                    <?php echo rende_sequences_modal($id, $sequencia, $texto_sequencia); ?>
+                                                                </li>
+                                                            <?php endforeach; ?>
+                                                        </ul>
+                                                    </li>
+                                                <?php endif; ?>
                                             <?php endforeach; ?>
                                         </ul>
                                         <div class="flex justify-end">

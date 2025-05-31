@@ -1,5 +1,4 @@
 <?php
-
 function enqueue_ajax_scripts()
 {
     // Localize script para passar o nonce ao JavaScript
@@ -22,44 +21,55 @@ function create_map_ajax_handler()
     // Verifique a permissão do usuário atual
     if (!current_user_can('edit_mapas')) {
         wp_send_json_error('Você não tem permissão para criar mapas.');
-        return;
+        wp_die();
     }
 
     // Obtenha os dados do formulário
-    $title = sanitize_text_field($_POST['title']);
-    $name = sanitize_text_field($_POST['name']);
-    $dob = sanitize_text_field($_POST['dob']);
-    $dob = str_replace("-","",$dob);
+    $title = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
+    $name  = isset($_POST['name'])  ? sanitize_text_field($_POST['name'])  : '';
+    $dob   = isset($_POST['dob'])   ? sanitize_text_field($_POST['dob'])   : '';
 
-    // Verifique se já existe um mapa com o mesmo título
-    $existing_map = postExists($title, 'mapas');
-
-    if ($existing_map) {
-        wp_send_json_error('Já existe um mapa com este título. Por favor, escolha um título diferente.');
-        return;
+    // Verificações obrigatórias
+    if (empty($title) || empty($name) || empty($dob)) {
+        wp_send_json_error('Todos os campos obrigatórios devem ser preenchidos.');
+        wp_die();
     }
 
-    // Crie o post do tipo 'mapas'
+    // Remover traços da data (formato yyyy-mm-dd para yyyymmdd)
+    $dob = str_replace('-', '', $dob);
+
+    // Verifique se já existe um mapa com o mesmo título
+    // if (postExists($title, 'mapas')) {
+    //     wp_send_json_error('Já existe um mapa com este título. Por favor, escolha um título diferente.');
+    //     wp_die();
+    // }
+
+    // Criar o post do tipo 'mapas'
     $data = array(
-        'post_title' => $title,
-        'post_type' => 'mapas',
+        'post_title'  => $title,
+        'post_type'   => 'mapas',
         'post_status' => 'publish',
         'post_author' => get_current_user_id(),
     );
 
-    $map = wp_insert_post($data);
+    $map_id = wp_insert_post($data);
 
-    if (is_wp_error($map) || $map === 0) {
-        wp_send_json_error(["msg" => 'Erro ao criar o mapa.', "map_id" => $map]);
-    } else {
-        // Adicione os metadados ao post criado
-        update_post_meta($map, 'mapas_details__mapas_nome_completo', $name);
-        update_post_meta($map, 'mapas_details__mapas_data_nascimento', $dob);
-
-        wp_send_json_success(array(
-            'redirect_url' => get_permalink($map),
-        ));
+    if (is_wp_error($map_id) || $map_id === 0) {
+        wp_send_json_error([
+            'msg' => 'Erro ao criar o mapa.',
+            'map_id' => $map_id
+        ]);
+        wp_die();
     }
+
+    // Salvar metadados
+    update_post_meta($map_id, 'mapas_details__mapas_nome_completo', $name);
+    update_post_meta($map_id, 'mapas_details__mapas_data_nascimento', $dob);
+
+    // Sucesso
+    wp_send_json_success([
+        'redirect_url' => get_permalink($map_id),
+    ]);
 
     wp_die();
 }
@@ -81,49 +91,59 @@ function create_placa_ajax_handler()
     // Verifique o nonce
     if (!isset($_POST['security']) || !wp_verify_nonce($_POST['security'], 'create_placas_nonce')) {
         wp_send_json_error('Verificação de segurança falhou, por favor tente novamente.');
-        return;
+        wp_die();
     }
 
     // Verifique a permissão do usuário atual
     if (!current_user_can('edit_placas')) {
         wp_send_json_error('Você não tem permissão para criar placas.');
-        return;
+        wp_die();
     }
 
-    // Obtenha os dados do formulário
-    $title = sanitize_text_field($_POST['title']);
-    $dob = sanitize_text_field($_POST['dob']);
-    $numero_telefone = sanitize_text_field($_POST['numero_telefone']);
-    $placa_veiculo = sanitize_text_field($_POST['placa_veiculo']);
+    // Obtenha e sanitize os dados
+    $title           = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
+    $dob             = isset($_POST['dob']) ? sanitize_text_field($_POST['dob']) : '';
+    $numero_telefone = isset($_POST['numero_telefone']) ? sanitize_text_field($_POST['numero_telefone']) : '';
+    $placa_veiculo   = isset($_POST['placa_veiculo']) ? sanitize_text_field($_POST['placa_veiculo']) : '';
+
+    // Valide os campos obrigatórios
+    if (empty($title) || empty($dob) || empty($numero_telefone) || empty($placa_veiculo)) {
+        wp_send_json_error('Preencha todos os campos obrigatórios.');
+        wp_die();
+    }
+
+    // Limpe a data de nascimento (remove traços, por exemplo)
+    $dob = str_replace('-', '', $dob);
 
     // Verifique se já existe uma placa com o mesmo título
-    $existing_placa = postExists($title, 'placas');
+    // $existing_placa = postExists($title, 'placas');
 
-    if ($existing_placa) {
-        wp_send_json_error('Já existe uma placa com este título. Por favor, escolha um título diferente.');
-        return;
-    }
+    // if ($existing_placa) {
+    //     wp_send_json_error('Já existe uma placa com este título. Por favor, escolha um título diferente.');
+    //     wp_die();
+    // }
 
     // Crie o post do tipo 'placas'
     $placa_id = wp_insert_post(array(
-        'post_title' => $title,
-        'post_type' => 'placas',
+        'post_title'  => $title,
+        'post_type'   => 'placas',
         'post_status' => 'publish',
         'post_author' => get_current_user_id(),
     ));
 
     if (is_wp_error($placa_id) || $placa_id === 0) {
         wp_send_json_error('Erro ao criar a placa.');
-    } else {
-        // Adicione os metadados ao post criado
-        update_post_meta($placa_id, 'placas_details__placas_data_nascimento', $dob);
-        update_post_meta($placa_id, 'placas_details__placas_numero_telefone', $numero_telefone);
-        update_post_meta($placa_id, 'placas_details__placas_placa_veiculo', $placa_veiculo);
-
-        wp_send_json_success(array(
-            'redirect_url' => get_permalink($placa_id),
-        ));
+        wp_die();
     }
+
+    // Adicione os metadados ao post criado
+    update_post_meta($placa_id, 'placas_details__placas_data_nascimento', $dob);
+    update_post_meta($placa_id, 'placas_details__placas_numero_telefone', $numero_telefone);
+    update_post_meta($placa_id, 'placas_details__placas_placa_veiculo', $placa_veiculo);
+
+    wp_send_json_success(array(
+        'redirect_url' => get_permalink($placa_id),
+    ));
 
     wp_die();
 }
@@ -151,17 +171,27 @@ function create_endereco_ajax_handler()
 
     // Verifique a permissão do usuário atual
     if (!current_user_can('edit_mapas')) {
-        wp_send_json_error('Você não tem permissão para criar mapas.');
-        return;
+        wp_send_json_error('Você não tem permissão para criar endereços.');
+        wp_die();
     }
 
-    // Obtenha os dados do formulário
-    extract($_POST);
+    // Obtenha e valide os dados
+    $cep         = isset($_POST['cep']) ? sanitize_text_field($_POST['cep']) : '';
+    $endereco    = isset($_POST['endereco']) ? sanitize_text_field($_POST['endereco']) : '';
+    $numero      = isset($_POST['numero']) ? sanitize_text_field($_POST['numero']) : '';
+    $complemento = isset($_POST['complemento']) ? sanitize_text_field($_POST['complemento']) : '';
+    $type        = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
 
-    // // Crie o post do tipo 'mapas'
+    // Verificação de campos obrigatórios
+    if (empty($cep) || empty($endereco) || empty($numero) || empty($type)) {
+        wp_send_json_error('Preencha todos os campos obrigatórios.');
+        wp_die();
+    }
+
+    // Crie o post do tipo 'endereco'
     $data = array(
-        'post_title' => $endereco,
-        'post_type' => $type,
+        'post_title'  => $endereco,
+        'post_type'   => $type,
         'post_status' => 'publish',
         'post_author' => get_current_user_id(),
     );
@@ -170,17 +200,18 @@ function create_endereco_ajax_handler()
 
     if (is_wp_error($novo_endereco) || $novo_endereco === 0) {
         wp_send_json_error(["msg" => 'Erro ao criar o endereço.', "endereco_id" => $novo_endereco]);
-    } else {
-        // Adicione os metadados ao post criado
-        update_post_meta($novo_endereco, 'cep', $cep);
-        update_post_meta($novo_endereco, 'endereco', $endereco);
-        update_post_meta($novo_endereco, 'numero', $numero);
-        update_post_meta($novo_endereco, 'complemento', $complemento);
-
-        wp_send_json_success(array(
-            'redirect_url' => get_permalink($novo_endereco),
-        ));
+        wp_die();
     }
+
+    // Adicione os metadados ao post criado
+    update_post_meta($novo_endereco, 'cep', $cep);
+    update_post_meta($novo_endereco, 'endereco', $endereco);
+    update_post_meta($novo_endereco, 'numero', $numero);
+    update_post_meta($novo_endereco, 'complemento', $complemento);
+
+    wp_send_json_success(array(
+        'redirect_url' => get_permalink($novo_endereco),
+    ));
 
     wp_die();
 }
@@ -206,16 +237,26 @@ function create_empresa_ajax_handler()
     // Verifique a permissão do usuário atual
     if (!current_user_can('edit_mapas')) {
         wp_send_json_error('Você não tem permissão para criar mapas.');
-        return;
+        wp_die();
     }
 
-    // Obtenha os dados do formulário
-    extract($_POST);
+    // Obtenha e valide os dados
+    $razao_social   = isset($_POST['razao_social']) ? sanitize_text_field($_POST['razao_social']) : '';
+    $nome_fantasia  = isset($_POST['nome_fantasia']) ? sanitize_text_field($_POST['nome_fantasia']) : '';
+    $data_abertura  = isset($_POST['data_abertura']) ? sanitize_text_field($_POST['data_abertura']) : '';
+    $data_alteracao = isset($_POST['data_alteracao']) ? sanitize_text_field($_POST['data_alteracao']) : '';
+    $type           = isset($_POST['type']) ? sanitize_text_field($_POST['type']) : '';
 
-    // // Crie o post do tipo 'mapas'
+    // Verificação obrigatória dos campos
+    if (empty($razao_social) || empty($nome_fantasia) || empty($type)) {
+        wp_send_json_error('Preencha todos os campos obrigatórios.');
+        wp_die();
+    }
+
+    // Crie o post do tipo 'empresa'
     $data = array(
-        'post_title' => $razao_social,
-        'post_type' => $type,
+        'post_title'  => $razao_social,
+        'post_type'   => $type,
         'post_status' => 'publish',
         'post_author' => get_current_user_id(),
     );
@@ -223,18 +264,22 @@ function create_empresa_ajax_handler()
     $nova_empresa = wp_insert_post($data);
 
     if (is_wp_error($nova_empresa) || $nova_empresa === 0) {
-        wp_send_json_error(["msg" => 'Erro ao criar a empresa.', "empresa_id" => $nova_empresa]);
-    } else {
-        // Adicione os metadados ao post criado
-        update_post_meta($nova_empresa, 'razao_social', $razao_social);
-        update_post_meta($nova_empresa, 'nome_fantasia', $nome_fantasia);
-        update_post_meta($nova_empresa, 'data_abertura', $data_abertura);
-        update_post_meta($nova_empresa, 'data_alteracao', $data_alteracao);
-
-        wp_send_json_success(array(
-            'redirect_url' => get_permalink($nova_empresa),
-        ));
+        wp_send_json_error([
+            "msg" => 'Erro ao criar a empresa.',
+            "empresa_id" => $nova_empresa
+        ]);
+        wp_die();
     }
+
+    // Adicione os metadados
+    update_post_meta($nova_empresa, 'razao_social', $razao_social);
+    update_post_meta($nova_empresa, 'nome_fantasia', $nome_fantasia);
+    update_post_meta($nova_empresa, 'data_abertura', $data_abertura);
+    update_post_meta($nova_empresa, 'data_alteracao', $data_alteracao);
+
+    wp_send_json_success([
+        'redirect_url' => get_permalink($nova_empresa),
+    ]);
 
     wp_die();
 }
@@ -260,49 +305,59 @@ function create_assinatura_ajax_handler()
     // Verifique a permissão do usuário atual
     if (!current_user_can('edit_assinatura')) {
         wp_send_json_error('Você não tem permissão para criar Análises.');
-        return;
+        wp_die();
     }
 
-    // Obtenha os dados do formulário
-    $title = sanitize_text_field($_POST['title']);
-    $name = sanitize_text_field($_POST['name']);
-    $dob = sanitize_text_field($_POST['dob']);
-    $dob = str_replace("-","",$dob);
+    // Obtenha os dados do formulário com validação
+    $title = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
+    $name  = isset($_POST['name'])  ? sanitize_text_field($_POST['name'])  : '';
+    $dob   = isset($_POST['dob'])   ? sanitize_text_field($_POST['dob'])   : '';
 
-    // Verifique se já existe um mapa com o mesmo título
-    $existing_assinatura = postExists($title, 'assinatura');
-
-    if ($existing_assinatura) {
-        wp_send_json_error('Já existe um mapa com este título. Por favor, escolha um título diferente.');
-        return;
+    if (empty($title) || empty($name) || empty($dob)) {
+        wp_send_json_error('Todos os campos obrigatórios devem ser preenchidos.');
+        wp_die();
     }
 
-    // Crie o post do tipo 'mapas'
+    // Formatando a data
+    $dob = str_replace('-', '', $dob);
+
+    // Verifique se já existe um post com o mesmo título
+    // $existing_assinatura = postExists($title, 'assinatura');
+
+    // if ($existing_assinatura) {
+    //     wp_send_json_error('Já existe uma análise com este título. Por favor, escolha um título diferente.');
+    //     wp_die();
+    // }
+
+    // Crie o post do tipo 'assinatura'
     $data = array(
-        'post_title' => $title,
-        'post_type' => 'assinatura',
+        'post_title'  => $title,
+        'post_type'   => 'assinatura',
         'post_status' => 'publish',
         'post_author' => get_current_user_id(),
     );
 
-    $assinatura = wp_insert_post($data);
+    $assinatura_id = wp_insert_post($data);
 
-    if (is_wp_error($assinatura) || $assinatura === 0) {
-        wp_send_json_error(["msg" => 'Erro ao criar o mapa.', "assinatura_id" => $assinatura]);
-    } else {
-        // Adicione os metadados ao post criado
-        update_post_meta($assinatura, '_nome_completo', $name);
-        update_post_meta($assinatura, '_data_nascimento', $dob);
-
-        wp_send_json_success(array(
-            'redirect_url' => get_permalink($assinatura),
-        ));
+    if (is_wp_error($assinatura_id) || $assinatura_id === 0) {
+        wp_send_json_error([
+            "msg" => 'Erro ao criar a análise.',
+            "assinatura_id" => $assinatura_id
+        ]);
+        wp_die();
     }
+
+    // Adicione os metadados ao post criado
+    update_post_meta($assinatura_id, '_nome_completo', $name);
+    update_post_meta($assinatura_id, '_data_nascimento', $dob);
+
+    wp_send_json_success([
+        'redirect_url' => get_permalink($assinatura_id),
+    ]);
 
     wp_die();
 }
 add_action('wp_ajax_create_assinatura', 'create_assinatura_ajax_handler', 1);
-
 
 // Funções de Salvamento
 function save_assinatura_ajax_scripts()
