@@ -1136,7 +1136,7 @@ class NumerologiaDados
     public static function sequenciasVibracionais()
     {
         $sequenciasNegativas = ['111', '222', '333', '444', '555', '666', '777', '888', '999'];
-        $sequenciasPositivas = ['116', '118', '119', '123', '168', '252', '518', '575', '637','665', '667', '725', '757', '922', '923', '924', '925', '926', '927'];
+        $sequenciasPositivas = ['116', '118', '119', '123', '168', '252', '518', '575', '637','665', '667', '757', '922', '923', '924', '925', '926', '927'];
         return [
             'positivas' => $sequenciasPositivas,
             'negativas' => $sequenciasNegativas
