@@ -15,7 +15,7 @@ $profile_picture = get_user_meta($user_id, 'profile_picture', true);
 <header id="masthead" class="bg-white text-black p-4 shadow-md">
     <div class="container mx-auto flex justify-between items-center">
         <!-- Logo -->
-        <div class="text-lg font-bold">
+        <div class="text-md font-bold">
             <a href="<?php echo esc_url(home_url('/')); ?>">
                 <img id="logo-superior" src="<?php echo get_template_directory_uri(); ?>/images/logo.png" alt="<?php bloginfo('name'); ?>" class="h-10">
             </a>

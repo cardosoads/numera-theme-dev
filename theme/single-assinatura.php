@@ -58,7 +58,7 @@ get_header();
                                     <span id="consoantes" class="hidden"><?php echo json_encode($consoantes); ?></span>
                                     <?php foreach ($letras_nome as $letra): ?>
                                         <div class="flex flex-col items-center w-8">
-                                            <?php if (ctype_alpha($letra) || is_numeric($letra) && trim($letra) !== ' '): ?>
+                                            <?php if (preg_match('/\p{L}/u', $letra) || (is_numeric($letra) && trim($letra) !== ' ')): ?>
                                                 <div class="bg-green-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">
                                                     <?php echo isset($consoantes[$letra]) ? $consoantes[$letra] : ' '; ?>
                                                 </div>
@@ -85,7 +85,7 @@ get_header();
                                     <span id="vogais" class="hidden"><?php echo json_encode($vogais); ?></span>
                                     <?php foreach ($letras_nome as $letra): ?>
                                         <div class="flex flex-col items-center w-8">
-                                            <?php if (ctype_alpha($letra) || is_numeric($letra) && trim($letra) !== ' '): ?>
+                                            <?php if (preg_match('/\p{L}/u', $letra) || (is_numeric($letra) && trim($letra) !== ' ')): ?>
                                                 <div class="bg-blue-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">
                                                     <?php echo isset($vogais[$letra]) ? $vogais[$letra] : ' '; ?>
                                                 </div>
@@ -101,7 +101,7 @@ get_header();
                                     <span id="alfabeto" class="hidden"><?php echo json_encode($alfabeto); ?></span>
                                     <?php foreach ($letras_nome as $letra): ?>
                                         <div class="flex flex-col items-center w-8">
-                                            <?php if (ctype_alpha($letra) || is_numeric($letra) && trim($letra) !== ' '): ?>
+                                            <?php if (preg_match('/\p{L}/u', $letra) || (is_numeric($letra) && trim($letra) !== ' ')): ?>
                                                 <div class="bg-purple-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">
                                                     <?php echo isset($alfabeto[$letra]) ? $alfabeto[$letra] : ' '; ?>
                                                 </div>
@@ -116,31 +116,37 @@ get_header();
                                 <div class="flex justify-center flex-wrap gap-2" id="somatorias-partes-result">
                                     <?php
                                     $posicoes_partes = [];
-                                    $nome_completo_lower = strtolower($nome_completo);
-                                    $letras_nome_lower = array_map('strtolower', $letras_nome);
 
+                                    // Transforma cada letra do nome completo em minúscula (com suporte a acentos)
+                                    $letras_nome_lower = array_map(fn($l) => mb_strtolower($l, 'UTF-8'), $letras_nome);
+                                    $nome_completo_junto = implode('', $letras_nome_lower);
+
+                                    // Localiza as posições de cada parte no nome completo
                                     foreach ($partes_nome_com_dados as $parte_dados) {
-                                        $parte_nome = strtolower($parte_dados['parte']);
-                                        $posicao_inicial = -1;
-                                        for ($i = 0; $i < count($letras_nome_lower) - strlen($parte_nome) + 1; $i++) {
-                                            if (implode('', array_slice($letras_nome_lower, $i, strlen($parte_nome))) === $parte_nome) {
-                                                $posicao_inicial = $i;
-                                                break;
-                                            }
-                                        }
-                                        if ($posicao_inicial !== -1) {
+                                        $parte_nome = mb_strtolower($parte_dados['parte'], 'UTF-8');
+                                        $posicao_str = mb_strpos($nome_completo_junto, $parte_nome, 0, 'UTF-8');
+
+                                        if ($posicao_str !== false) {
+                                            $prefixo = mb_substr($nome_completo_junto, 0, $posicao_str, 'UTF-8');
+                                            $posicao_inicial = mb_strlen($prefixo, 'UTF-8');
+
                                             $posicoes_partes[] = [
                                                 'posicao' => $posicao_inicial,
                                                 'motivacao' => $parte_dados['motivacao'],
-                                                'expressao' => $parte_dados['expressao']
+                                                'expressao' => $parte_dados['expressao'],
+                                                'tamanho' => mb_strlen($parte_nome, 'UTF-8'),
                                             ];
                                         }
                                     }
 
+                                    // Exibe os quadradinhos
                                     $indice_parte = 0;
                                     $letras_exibidas = 0;
+
                                     for ($i = 0; $i < count($letras_nome); $i++) {
+                                        // Verifica se é o início de uma parte
                                         if ($indice_parte < count($posicoes_partes) && $i === $posicoes_partes[$indice_parte]['posicao']) {
+                                            // Motivação
                                             echo '<div class="flex flex-col items-center w-8">';
                                             echo '<div class="bg-yellow-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">';
                                             echo esc_html($posicoes_partes[$indice_parte]['motivacao']);
@@ -148,18 +154,23 @@ get_header();
                                             echo '</div>';
 
                                             $i++;
+
+                                            // Expressão
                                             echo '<div class="flex flex-col items-center w-8">';
                                             echo '<div class="bg-red-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">';
                                             echo esc_html($posicoes_partes[$indice_parte]['expressao']);
                                             echo '</div>';
                                             echo '</div>';
 
-                                            $indice_parte++;
                                             $letras_exibidas = 2;
-                                        } elseif ($letras_exibidas > 0 && $indice_parte > 0 && $letras_exibidas < strlen($partes_nome_com_dados[$indice_parte - 1]['parte'])) {
+                                            $indice_parte++;
+                                        } elseif ($letras_exibidas > 0 && $indice_parte > 0 && $letras_exibidas < $posicoes_partes[$indice_parte - 1]['tamanho']) {
+                                            // Espaços ocupados pela parte do nome (sem número)
                                             echo '<div class="w-8 h-8"></div>';
                                             $letras_exibidas++;
                                         } else {
+                                            // Espaços vazios
+                                            $letras_exibidas = 0;
                                             echo '<div class="w-8 h-8"></div>';
                                         }
                                     }

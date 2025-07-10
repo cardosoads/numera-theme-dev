@@ -28,7 +28,7 @@ $consoantes = NumerologiaDados::obterConsoantes();
 $alfabeto = NumerologiaDados::obterAlfabeto();
 $tabelaPiramides = NumerologiaDados::obterTabelaPiramides();
 // Calcula os valores baseados nos dados de entrada
-$letras_nome = str_split($nome_completo);
+$letras_nome = mb_str_split($nome_completo);
 //echo '<pre>';
 //var_dump($letras_nome);
 //echo '</pre>';
@@ -60,7 +60,6 @@ foreach ($partes_nome as $parte) {
         'expressao' => $soma_expressao
     ];
 }
-
 // Agora $partes_nome_com_dados contém um array onde cada elemento é um array com 3 dados:
 
 $numero_missao = $numerologia->calcularNumeroMissao($numero_destino, $numero_expressao);  // Depende de destino e expressão

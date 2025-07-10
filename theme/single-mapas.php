@@ -109,7 +109,7 @@ get_header();
                                     <span id="consoantes" class="hidden"><?php echo json_encode($consoantes); ?></span>
                                     <?php foreach ($letras_nome as $letra): ?>
                                         <div class="flex flex-col items-center w-8">
-                                            <?php if (ctype_alpha($letra) || is_numeric($letra) && trim($letra) !== ' '): ?>
+                                            <?php if (preg_match('/\p{L}/u', $letra) || (is_numeric($letra) && trim($letra) !== ' ')): ?>
                                                 <div class="bg-green-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">
                                                     <?php echo isset($consoantes[$letra]) ? $consoantes[$letra] : ' '; ?>
                                                 </div>
@@ -136,7 +136,7 @@ get_header();
                                     <span id="vogais" class="hidden"><?php echo json_encode($vogais); ?></span>
                                     <?php foreach ($letras_nome as $letra): ?>
                                         <div class="flex flex-col items-center w-8">
-                                            <?php if (ctype_alpha($letra) || is_numeric($letra) && trim($letra) !== ' '): ?>
+                                            <?php if (preg_match('/\p{L}/u', $letra) || (is_numeric($letra) && trim($letra) !== ' ')): ?>
                                                 <div class="bg-blue-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">
                                                     <?php echo isset($vogais[$letra]) ? $vogais[$letra] : ' '; ?>
                                                 </div>
@@ -152,7 +152,7 @@ get_header();
                                     <span id="alfabeto" class="hidden"><?php echo json_encode($alfabeto); ?></span>
                                     <?php foreach ($letras_nome as $letra): ?>
                                         <div class="flex flex-col items-center w-8">
-                                            <?php if (ctype_alpha($letra) || is_numeric($letra) && trim($letra) !== ' '): ?>
+                                            <?php if (preg_match('/\p{L}/u', $letra) || (is_numeric($letra) && trim($letra) !== ' ')): ?>
                                                 <div class="bg-purple-500 text-white rounded-lg shadow-md w-8 h-8 flex items-center justify-center">
                                                     <?php echo isset($alfabeto[$letra]) ? $alfabeto[$letra] : ' '; ?>
                                                 </div>

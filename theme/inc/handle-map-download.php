@@ -664,7 +664,7 @@ function add_pyramid_sequence_section($section, $titulo, $nome_completo, $pirami
 
                     if ($j + $seqLength <= $linhaLength && substr($linhaFormatada, $j, $seqLength) === $sequencia) {
                         $bold = true;
-                        $textRun->addText(implode(" ", str_split($sequencia)) . " ", ['name' => 'Arial', 'size' => 10, 'color' => '800080', 'italic' => true, 'bold' => true]);
+                        $textRun->addText(implode(" ", mb_str_split($sequencia)) . " ", ['name' => 'Arial', 'size' => 10, 'color' => '800080', 'italic' => true, 'bold' => true]);
                         $j += $seqLength;
                         continue 2;
                     }
@@ -742,7 +742,7 @@ function add_sequence_positive_section($section, $sequencias_positivas_options, 
 //    for ($i = 0; $i < $maxLinha; $i++) {
 //        $espacos = str_repeat(" ", $i * 2); // Ajusta o espaçamento para melhor formatação
 //        $linhaFormatada = preg_replace('/[^0-9]/', '', implode("", $piramide[$i])); // Remove caracteres não numéricos e junta os elementos
-//        $linhaEspacada = implode(" ", str_split($linhaFormatada)); // Adiciona espaçamento entre os números
+//        $linhaEspacada = implode(" ", mb_str_split($linhaFormatada)); // Adiciona espaçamento entre os números
 //
 //        if (strlen($linhaFormatada) > 0) { // Evita adicionar linhas vazias
 //            // Alinha à esquerda apenas no TextRun

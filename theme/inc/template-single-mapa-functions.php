@@ -28,7 +28,7 @@ $consoantes = NumerologiaDados::obterConsoantes();
 $alfabeto = NumerologiaDados::obterAlfabeto();
 $tabelaPiramides = NumerologiaDados::obterTabelaPiramides();
 // Calcula os valores baseados nos dados de entrada
-$letras_nome = str_split($nome_completo);
+$letras_nome = mb_str_split($nome_completo);
 
 $numerologia = new Numerologia();
 

@@ -4,7 +4,7 @@ class NumerologiaCalculos
 {
     public static function somarAlgarismos($numero)
     {
-        return array_sum(str_split($numero));
+        return array_sum(mb_str_split($numero));
     }
     public static function reduzirNumeroSimples($numero)
     {
@@ -30,21 +30,21 @@ class NumerologiaCalculos
     public static function reduzirTeosoficamente($numero)
     {
         while ($numero > 9 && $numero != 11 && $numero != 22) {
-            $numero = array_sum(str_split($numero));
+            $numero = array_sum(mb_str_split($numero));
         }
         return $numero;
     }
     public static function reduzirTeosoficamenteAte11($numero)
     {
         while ($numero > 9 && $numero != 11 ) {
-            $numero = array_sum(str_split($numero));
+            $numero = array_sum(mb_str_split($numero));
         }
         return $numero;
     }
     public static function calcularSomaLetras($nome, $tabela)
     {
         $soma = 0;
-        foreach (str_split($nome) as $letra) {
+        foreach (mb_str_split($nome) as $letra) {
             if (isset($tabela[$letra])) {
                 $soma += $tabela[$letra];
             }
@@ -54,7 +54,7 @@ class NumerologiaCalculos
     public static function calcularSomaLetrasSemReduzir($nome, $tabela)
     {
         $soma = 0;
-        foreach (str_split($nome) as $letra) {
+        foreach (mb_str_split($nome) as $letra) {
             if (isset($tabela[$letra])) {
                 $soma += $tabela[$letra];
             }
@@ -211,7 +211,7 @@ class NumerologiaCalculos
 //
 //        $contagemNumeros = array_fill(1, 9, 0);
 //
-//        foreach (str_split(strtolower($nome)) as $letra) {
+//        foreach (mb_str_split(strtolower($nome)) as $letra) {
 //            if (isset($tabela[$letra])) {
 //                $contagemNumeros[$tabela[$letra]]++;
 //            }
@@ -257,7 +257,7 @@ class NumerologiaCalculos
         $nome = str_replace(' ', '', $nome);
 
         // Contar as frequências das letras
-        foreach (str_split($nome) as $letra) {
+        foreach (mb_str_split($nome) as $letra) {
             if (isset($tabela[$letra])) {
                 $numero = $tabela[$letra];
                 $frequencias[$numero]++;
@@ -360,9 +360,9 @@ class NumerologiaCalculos
         $dia = date('d', strtotime($dataNascimento));
 
         // Realizar a redução teosófica do dia
-        $reduzido = array_sum(str_split($dia));
+        $reduzido = array_sum(mb_str_split($dia));
         while ($reduzido > 9) {
-            $reduzido = array_sum(str_split($reduzido));
+            $reduzido = array_sum(mb_str_split($reduzido));
         }
 
         // Obter o conjunto de números harmônicos baseado no resultado reduzido
@@ -447,7 +447,7 @@ class NumerologiaCalculos
 
         // Contagem de frequências dos números
         $frequencias = [];
-        foreach (str_split($nome) as $letra) {
+        foreach (mb_str_split($nome) as $letra) {
             if (isset($tabela[$letra])) {
                 $numero = self::reduzirNumeroSimples($tabela[$letra]);
                 if (isset($frequencias[$numero])) {
@@ -477,7 +477,7 @@ class NumerologiaCalculos
         $nome = preg_replace('/[^a-zA-Z]/', '', $nome);
         $numeros = [];
 
-        foreach (str_split($nome) as $letra) {
+        foreach (mb_str_split($nome) as $letra) {
             if (isset($tabela[$letra])) {
                 $numeros[] = $tabela[$letra];
             }
@@ -491,7 +491,7 @@ class NumerologiaCalculos
         $primeiroNome = strtolower($primeiroNome);
 
         $numeros = [];
-        foreach (str_split($primeiroNome) as $letra) {
+        foreach (mb_str_split($primeiroNome) as $letra) {
             if (isset($tabela[$letra])) {
                 $numeros[] = $tabela[$letra];
             }
@@ -569,7 +569,14 @@ class NumerologiaCalculos
     {
         // Converter o nome completo em números usando a tabela
         $numeros = [];
-        $nomeArray = preg_split('//u', $nomeCompleto, -1, PREG_SPLIT_NO_EMPTY);
+
+        // Usar mb_str_split se disponível, com fallback para preg_split
+        if (function_exists('mb_str_split')) {
+            $nomeArray = mb_str_split($nomeCompleto, 1, 'UTF-8');
+        } else {
+            // Fallback seguro para PHP < 7.4
+            $nomeArray = preg_split('//u', $nomeCompleto, -1, PREG_SPLIT_NO_EMPTY);
+        }
 
         foreach ($nomeArray as $letra) {
             if (isset($alfabeto[$letra])) {
@@ -589,10 +596,10 @@ class NumerologiaCalculos
         if ($numArcanos > 0) {
             $duracaoArcanoTotal = 90 / $numArcanos;
         } else {
-            // Defina um valor padrão ou lance uma exceção
             error_log('Número de arcanos inválido: 0');
-            $duracaoArcanoTotal = 0; // Ou um valor padrão
+            $duracaoArcanoTotal = 0;
         }
+
         $anosPorArcano = floor($duracaoArcanoTotal);
         $mesesDecimais = ($duracaoArcanoTotal - $anosPorArcano) * 12;
         $mesesPorArcano = floor($mesesDecimais);
@@ -603,17 +610,15 @@ class NumerologiaCalculos
         $arcanosDetalhados = [];
 
         foreach ($arcanos as $index => $arcano) {
-            // Calcular a data de fim do arcano, ajustando os dias a partir do segundo período
             $fimArcano = clone $inicioArcano;
             $diasAjustados = $index > 0 ? $diasPorArcano - 1 : $diasPorArcano;
-            $diasAjustados = abs($diasAjustados); // Garantir que o número de dias seja positivo
+            $diasAjustados = abs($diasAjustados);
+
             $fimArcano->add(new DateInterval("P{$anosPorArcano}Y{$mesesPorArcano}M{$diasAjustados}D"));
 
-            // Calcular a idade da pessoa no início e fim do arcano
             $idadeInicio = $inicioArcano->diff(new DateTime($dataNascimento));
             $idadeFim = $fimArcano->diff(new DateTime($dataNascimento));
 
-            // Adicionar o arcano com suas informações detalhadas
             $arcanosDetalhados[] = [
                 'arcano' => $arcano,
                 'inicio' => $inicioArcano->format('d-m-Y'),
@@ -622,7 +627,6 @@ class NumerologiaCalculos
                 'idadeFim' => "{$idadeFim->y} anos, {$idadeFim->m} meses e {$idadeFim->d} dias",
             ];
 
-            // Atualizar o início para o próximo arcano (exatamente um dia após o fim do arcano atual)
             $inicioArcano = clone $fimArcano;
             $inicioArcano->add(new DateInterval("P1D"));
         }
@@ -655,40 +659,45 @@ class NumerologiaCalculos
     }
     public static function calcularArcanoVida($nomeCompleto, $dataNascimento, $tabelaBase)
     {
+        // Função para redução teosófica
+        $reduzirTeosoficamente = function ($numero) {
+            while ($numero > 9 && $numero != 11 && $numero != 22) {
+                $numero = array_sum(mb_str_split((string)$numero));
+            }
+            return $numero;
+        };
+
+        // 1. Redução do dia de nascimento
         $diaNascimento = (int)date('d', strtotime($dataNascimento));
+        $diaReducao = $reduzirTeosoficamente($diaNascimento);
 
-        $diaReducao = array_sum(str_split($diaNascimento)); // Reduzir o dia
-        if ($diaReducao >= 10) {
-            $diaReducao = array_sum(str_split($diaReducao));
-        }
-
-        // Criar uma nova tabela deslocada de acordo com a redução do dia
+        // 2. Criar a tabela deslocada
         $tabelaDeslocada = [];
         $tamanhoTabela = count($tabelaBase);
-
         foreach ($tabelaBase as $posicao => $letras) {
             $novaPosicao = ($posicao + $diaReducao - 1) % $tamanhoTabela + 1;
             $tabelaDeslocada[$novaPosicao] = $letras;
         }
 
-        // Variáveis para soma e sequência
+        // 3. Símbolos especiais e seus ajustes
+        $ajustesSimbolos = [
+            2 => ["\xC2\xA8", "\x60", "\xC2\xB4", "\x27"], // Trema, Crase, Agudo, Apóstrofo
+            7 => ["\xC2\xB0", "\x5E"],                    // Grau e Circunferência
+            3 => ["\x7E"],                                // Til
+        ];
+
+        // 4. Preparar variáveis
+        $nomeArray = mb_str_split($nomeCompleto);
         $soma = 0;
         $sequencia = "";
+        $numeros = [];
 
-        // Convertendo o nome para um array de caracteres considerando codificação UTF-8
-        $nomeArray = preg_split('//u', $nomeCompleto, -1, PREG_SPLIT_NO_EMPTY);
-
-        // Definição dos símbolos especiais utilizando seus códigos UTF-8
-        $simbolosEspeciais1 = ["\xC2\xA8", "\x60", "\xC2\xB4", "\x27"]; // Trema, Crase, Agudo, Apóstrofo
-        $simbolosEspeciais2 = ["\xC2\xB0", "\x5E"]; // Grau e Circunferência
-        $simbolosEspeciais3 = ["\x7E"]; // Til
-
-        // Iterar sobre cada letra do nome
+        // 5. Iterar sobre as letras do nome
         for ($i = 0; $i < count($nomeArray); $i++) {
             $letra = $nomeArray[$i];
             $valorLetra = 0;
 
-            // Procurar o valor da letra na tabela deslocada
+            // Mapear letra na tabela deslocada
             foreach ($tabelaDeslocada as $numero => $letras) {
                 if (in_array($letra, $letras)) {
                     $valorLetra = $numero;
@@ -696,80 +705,55 @@ class NumerologiaCalculos
                 }
             }
 
-            // Verificar se há símbolos especiais à esquerda da letra atual
+            // Verificar símbolo anterior e aplicar ajustes
             if ($i > 0) {
                 $simboloAnterior = $nomeArray[$i - 1];
-
-                // Verificar presença de símbolos do grupo 1
-                if (in_array($simboloAnterior, $simbolosEspeciais1)) {
-                    $valorLetra += 2;
+                foreach ($ajustesSimbolos as $incremento => $simbolos) {
+                    if (in_array($simboloAnterior, $simbolos)) {
+                        $valorLetra += $incremento;
+                    }
                 }
 
-                // Verificar presença de símbolos do grupo 2
-                if (in_array($simboloAnterior, $simbolosEspeciais2)) {
-                    $valorLetra += 7;
-                }
-
-                // Verificar presença de símbolos do grupo 3
-                if (in_array($simboloAnterior, $simbolosEspeciais3)) {
-                    $valorLetra += 3;
-                }
-
-                // Aplicar redução teosófica se o valor da letra modificada for maior que 9
-                while ($valorLetra > 9) {
-                    $valorLetra = array_sum(str_split($valorLetra));
-                }
+                // Redução após símbolo
+                $valorLetra = $reduzirTeosoficamente($valorLetra);
             }
 
-            // Atualizar a soma total e a sequência de valores
-            $soma += $valorLetra;
-            $sequencia .= $valorLetra > 0 ? $valorLetra : '';
-        }
-
-        // Reduzir a soma a um único dígito ou número mestre
-        while ($soma > 9 && $soma != 11 && $soma != 22) {
-            $soma = array_sum(str_split($soma));
-        }
-
-        // Converter o nome completo em números usando a tabela deslocada
-        $numeros = [];
-        foreach ($nomeArray as $letra) {
-            foreach ($tabelaDeslocada as $numero => $letras) {
-                if (in_array($letra, $letras)) {
-                    $numeros[] = $numero;
-                    break;
-                }
+            // Somar e armazenar se for válido
+            if ($valorLetra > 0) {
+                $soma += $valorLetra;
+                $sequencia .= $valorLetra;
+                $numeros[] = $valorLetra;
             }
         }
 
-        // Gerar a sequência de Arcanos
+        // 6. Redução final da soma
+        $soma = $reduzirTeosoficamente($soma);
+
+        // 7. Construção dos Arcanos
         $arcanos = [];
         for ($i = 0; $i < count($numeros) - 1; $i++) {
-            $arcano = $numeros[$i] * 10 + $numeros[$i + 1];
-            $arcanos[] = $arcano;
+            $arcanos[] = $numeros[$i] * 10 + $numeros[$i + 1];
         }
 
-        // Calcular a duração de cada Arcano
+        // 8. Duração de cada arcano
         $numArcanos = count($arcanos);
         $duracaoArcanoTotal = ($numArcanos > 0) ? 90 / $numArcanos : null;
         $anosPorArcano = floor($duracaoArcanoTotal);
-        $mesesPorArcano = ($duracaoArcanoTotal - $anosPorArcano) * 12;
-        $mesesPorArcano = (int)$mesesPorArcano;
+        $mesesDecimais = ($duracaoArcanoTotal - $anosPorArcano) * 12;
+        $mesesPorArcano = floor($mesesDecimais);
+        $diasPorArcano = floor(($mesesDecimais - $mesesPorArcano) * 30);
 
-        // Definir a data inicial
+        // 9. Detalhamento dos arcanos com datas
         $inicioArcano = new DateTime($dataNascimento);
         $arcanosDetalhados = [];
 
         for ($i = 0; $i < count($arcanos); $i++) {
-            // Calcular a data de fim do arcano
             $fimArcano = clone $inicioArcano;
-            $fimArcano->add(new DateInterval("P{$anosPorArcano}Y{$mesesPorArcano}M"));
+            $fimArcano->add(new DateInterval("P{$anosPorArcano}Y{$mesesPorArcano}M{$diasPorArcano}D"));
 
-            // Calcular a idade da pessoa no início e fim do arcano
-            $idadeInicio = $inicioArcano->diff(new DateTime($dataNascimento));
-            $idadeFim = $fimArcano->diff(new DateTime($dataNascimento));
+            $idadeInicio = (new DateTime($dataNascimento))->diff($inicioArcano);
+            $idadeFim = (new DateTime($dataNascimento))->diff($fimArcano);
 
-            // Adicionar o arcano com suas informações detalhadas
             $arcanosDetalhados[] = [
                 'arcano' => $arcanos[$i],
                 'inicio' => $inicioArcano->format('d-m-Y'),
@@ -778,49 +762,55 @@ class NumerologiaCalculos
                 'idadeFim' => "{$idadeFim->y} anos e {$idadeFim->m} meses"
             ];
 
-            // Atualizar o início para o próximo arcano
             $inicioArcano = clone $fimArcano;
         }
 
-        return  $arcanosDetalhados;
-        //
+        // 10. Retorno final
+        return [
+            'arcanos' => $arcanosDetalhados,
+            'anosPorArcano' => $anosPorArcano,
+            'mesesPorArcano' => $mesesPorArcano,
+            'diasPorArcano' => $diasPorArcano,
+            'somaFinal' => $soma,
+            'sequencia' => $sequencia,
+        ];
     }
     public static function calcularArcanoPessoal($nomeCompleto, $dataNascimento, $tabelaBase)
     {
+        // 1. Reduzir o dia do nascimento teosoficamente
         $diaNascimento = (int)date('d', strtotime($dataNascimento));
-
-        $diaReducao = array_sum(str_split($diaNascimento)); // Reduzir o dia
+        $diaReducao = array_sum(mb_str_split((string)$diaNascimento));
         if ($diaReducao >= 10) {
-            $diaReducao = array_sum(str_split($diaReducao));
+            $diaReducao = array_sum(mb_str_split((string)$diaReducao));
         }
 
-        // Criar uma nova tabela deslocada de acordo com a redução do dia
+        // 2. Criar tabela deslocada
         $tabelaDeslocada = [];
         $tamanhoTabela = count($tabelaBase);
-
         foreach ($tabelaBase as $posicao => $letras) {
             $novaPosicao = ($posicao + $diaReducao - 1) % $tamanhoTabela + 1;
             $tabelaDeslocada[$novaPosicao] = $letras;
         }
 
-        // Variáveis para soma e sequência
+        // 3. Símbolos especiais e ajustes
+        $simbolosEspeciais = [
+            2 => ["¨", "`", "´", "'"], // Grupo 1: Trema, Crase, Agudo, Apóstrofo
+            7 => ["°", "^"],           // Grupo 2
+            3 => ["~"],                // Grupo 3
+        ];
+
+        // 4. Preparar variáveis
+        $nomeArray = mb_str_split($nomeCompleto);
         $soma = 0;
         $sequencia = "";
+        $numeros = [];
 
-        // Convertendo o nome para um array de caracteres considerando codificação UTF-8
-        $nomeArray = preg_split('//u', $nomeCompleto, -1, PREG_SPLIT_NO_EMPTY);
-
-        // Definição dos símbolos especiais utilizando seus códigos UTF-8
-        $simbolosEspeciais1 = ["\xC2\xA8", "\x60", "\xC2\xB4", "\x27"]; // Trema, Crase, Agudo, Apóstrofo
-        $simbolosEspeciais2 = ["\xC2\xB0", "\x5E"]; // Grau e Circunferência
-        $simbolosEspeciais3 = ["\x7E"]; // Til
-
-        // Iterar sobre cada letra do nome
+        // 5. Iterar sobre letras do nome
         for ($i = 0; $i < count($nomeArray); $i++) {
             $letra = $nomeArray[$i];
             $valorLetra = 0;
 
-            // Procurar o valor da letra na tabela deslocada
+            // Obter valor base da letra
             foreach ($tabelaDeslocada as $numero => $letras) {
                 if (in_array($letra, $letras)) {
                     $valorLetra = $numero;
@@ -828,80 +818,58 @@ class NumerologiaCalculos
                 }
             }
 
-            // Verificar se há símbolos especiais à esquerda da letra atual
+            // Verificar símbolos à esquerda
             if ($i > 0) {
                 $simboloAnterior = $nomeArray[$i - 1];
-
-                // Verificar presença de símbolos do grupo 1
-                if (in_array($simboloAnterior, $simbolosEspeciais1)) {
-                    $valorLetra += 2;
+                foreach ($simbolosEspeciais as $incremento => $simbolos) {
+                    if (in_array($simboloAnterior, $simbolos)) {
+                        $valorLetra += $incremento;
+                    }
                 }
 
-                // Verificar presença de símbolos do grupo 2
-                if (in_array($simboloAnterior, $simbolosEspeciais2)) {
-                    $valorLetra += 7;
-                }
-
-                // Verificar presença de símbolos do grupo 3
-                if (in_array($simboloAnterior, $simbolosEspeciais3)) {
-                    $valorLetra += 3;
-                }
-
-                // Aplicar redução teosófica se o valor da letra modificada for maior que 9
+                // Redução teosófica
                 while ($valorLetra > 9) {
-                    $valorLetra = array_sum(str_split($valorLetra));
+                    $valorLetra = array_sum(mb_str_split((string)$valorLetra));
                 }
             }
 
-            // Atualizar a soma total e a sequência de valores
-            $soma += $valorLetra;
-            $sequencia .= $valorLetra > 0 ? $valorLetra : '';
+            // Acumular resultados
+            if ($valorLetra > 0) {
+                $soma += $valorLetra;
+                $sequencia .= $valorLetra;
+                $numeros[] = $valorLetra;
+            }
         }
 
-        // Reduzir a soma a um único dígito ou número mestre
+        // 6. Redução final da soma
         while ($soma > 9 && $soma != 11 && $soma != 22) {
-            $soma = array_sum(str_split($soma));
+            $soma = array_sum(mb_str_split((string)$soma));
         }
 
-        // Converter o nome completo em números usando a tabela deslocada
-        $numeros = [];
-        foreach ($nomeArray as $letra) {
-            foreach ($tabelaDeslocada as $numero => $letras) {
-                if (in_array($letra, $letras)) {
-                    $numeros[] = $numero;
-                    break;
-                }
-            }
-        }
-
-        // Gerar a sequência de Arcanos
+        // 7. Gerar sequência de Arcanos (pares de números)
         $arcanos = [];
         for ($i = 0; $i < count($numeros) - 1; $i++) {
-            $arcano = $numeros[$i] * 10 + $numeros[$i + 1];
-            $arcanos[] = $arcano;
+            $arcanos[] = $numeros[$i] * 10 + $numeros[$i + 1];
         }
 
-        // Calcular a duração de cada Arcano
+        // 8. Calcular duração de cada arcano
         $numArcanos = count($arcanos);
-        $duracaoArcanoTotal = ($numArcanos > 0) ? 90 / $numArcanos : null;
-        $anosPorArcano = floor($duracaoArcanoTotal);
-        $mesesPorArcano = ($duracaoArcanoTotal - $anosPorArcano) * 12;
-        $mesesPorArcano = (int)$mesesPorArcano;
+        $duracaoTotal = ($numArcanos > 0) ? 90 / $numArcanos : 0;
+        $anos = floor($duracaoTotal);
+        $meses = floor(($duracaoTotal - $anos) * 12);
+        $dias = floor(((($duracaoTotal - $anos) * 12) - $meses) * 30);
 
-        // Definir a data inicial
+        // 9. Criar os arcanos detalhados
         $inicioArcano = new DateTime($dataNascimento);
         $arcanosDetalhados = [];
 
-        for ($i = 0; $i < count($arcanos); $i++) {
-            // Calcular a data de fim do arcano
+        for ($i = 0; $i < $numArcanos; $i++) {
             $fimArcano = clone $inicioArcano;
-            $fimArcano->add(new DateInterval("P{$anosPorArcano}Y{$mesesPorArcano}M"));
+            $fimArcano->add(new DateInterval("P{$anos}Y{$meses}M{$dias}D"));
 
-            // Calcular a idade da pessoa no início e fim do arcano
-            $idadeInicio = $inicioArcano->diff(new DateTime($dataNascimento));
-            $idadeFim = $fimArcano->diff(new DateTime($dataNascimento));
+            $idadeInicio = (new DateTime($dataNascimento))->diff($inicioArcano);
+            $idadeFim = (new DateTime($dataNascimento))->diff($fimArcano);
 
-            // Adicionar o arcano com suas informações detalhadas
             $arcanosDetalhados[] = [
                 'arcano' => $arcanos[$i],
                 'inicio' => $inicioArcano->format('d-m-Y'),
@@ -910,21 +878,19 @@ class NumerologiaCalculos
                 'idadeFim' => "{$idadeFim->y} anos e {$idadeFim->m} meses"
             ];
 
-            // Atualizar o início para o próximo arcano
             $inicioArcano = clone $fimArcano;
         }
 
-        return  $arcanosDetalhados;
-        //
+        return $arcanosDetalhados;
     }
     public static function calcularArcanoSocial($nomeCompleto, $dataNascimento, $tabelaBase)
     {
         $mesNascimento = (int)date('m', strtotime($dataNascimento));
 
         // Extrair o mês do nascimento
-        $mesReducao = array_sum(str_split($mesNascimento));
+        $mesReducao = array_sum(mb_str_split($mesNascimento));
         if ($mesReducao > 9) {
-            $mesReducao = array_sum(str_split($mesReducao));
+            $mesReducao = array_sum(mb_str_split($mesReducao));
         }
 
         // Criar uma nova tabela deslocada de acordo com a redução do dia
@@ -941,7 +907,8 @@ class NumerologiaCalculos
         $sequencia = "";
 
         // Convertendo o nome para um array de caracteres considerando codificação UTF-8
-        $nomeArray = preg_split('//u', $nomeCompleto, -1, PREG_SPLIT_NO_EMPTY);
+//        $nomeArray = preg_split('//u', $nomeCompleto, -1, PREG_SPLIT_NO_EMPTY);
+        $nomeArray = mb_str_split($nomeCompleto, 1, 'UTF-8');
 
         // Definição dos símbolos especiais utilizando seus códigos UTF-8
         $simbolosEspeciais1 = ["\xC2\xA8", "\x60", "\xC2\xB4", "\x27"]; // Trema, Crase, Agudo, Apóstrofo
@@ -982,7 +949,7 @@ class NumerologiaCalculos
 
                 // Aplicar redução teosófica se o valor da letra modificada for maior que 9
                 while ($valorLetra > 9) {
-                    $valorLetra = array_sum(str_split($valorLetra));
+                    $valorLetra = array_sum(mb_str_split($valorLetra));
                 }
             }
 
@@ -993,7 +960,7 @@ class NumerologiaCalculos
 
         // Reduzir a soma a um único dígito ou número mestre
         while ($soma > 9 && $soma != 11 && $soma != 22) {
-            $soma = array_sum(str_split($soma));
+            $soma = array_sum(mb_str_split($soma));
         }
 
         // Converter o nome completo em números usando a tabela deslocada
@@ -1055,19 +1022,19 @@ class NumerologiaCalculos
         $diaNascimento = (int)date('d', strtotime($dataNascimento));
         $mesNascimento = (int)date('m', strtotime($dataNascimento));
 
-        $diaReducao = array_sum(str_split($diaNascimento)); // Reduzir o dia
+        $diaReducao = array_sum(mb_str_split($diaNascimento)); // Reduzir o dia
         if ($diaReducao >= 10) {
-            $diaReducao = array_sum(str_split($diaReducao));
+            $diaReducao = array_sum(mb_str_split($diaReducao));
         }
         // Extrair o mês do nascimento
-        $mesReducao = array_sum(str_split($mesNascimento));
+        $mesReducao = array_sum(mb_str_split($mesNascimento));
         if ($mesReducao > 9) {
-            $mesReducao = array_sum(str_split($mesReducao));
+            $mesReducao = array_sum(mb_str_split($mesReducao));
         }
         // soma dia e mes nascimento reduzido, e reduz se necessário
         $reducaoFinal = $diaReducao + $mesReducao;
         if ($reducaoFinal > 9) {
-            $reducaoFinal = array_sum(str_split($reducaoFinal));
+            $reducaoFinal = array_sum(mb_str_split($reducaoFinal));
         }
 
         // Criar uma nova tabela deslocada de acordo com a redução do dia
@@ -1084,7 +1051,7 @@ class NumerologiaCalculos
         $sequencia = "";
 
         // Convertendo o nome para um array de caracteres considerando codificação UTF-8
-        $nomeArray = preg_split('//u', $nomeCompleto, -1, PREG_SPLIT_NO_EMPTY);
+        $nomeArray = mb_str_split($nomeCompleto);
 
         // Definição dos símbolos especiais utilizando seus códigos UTF-8
         $simbolosEspeciais1 = ["\xC2\xA8", "\x60", "\xC2\xB4", "\x27"]; // Trema, Crase, Agudo, Apóstrofo
@@ -1125,7 +1092,7 @@ class NumerologiaCalculos
 
                 // Aplicar redução teosófica se o valor da letra modificada for maior que 9
                 while ($valorLetra > 9) {
-                    $valorLetra = array_sum(str_split($valorLetra));
+                    $valorLetra = array_sum(mb_str_split($valorLetra));
                 }
             }
 
@@ -1136,7 +1103,7 @@ class NumerologiaCalculos
 
         // Reduzir a soma a um único dígito ou número mestre
         while ($soma > 9 && $soma != 11 && $soma != 22) {
-            $soma = array_sum(str_split($soma));
+            $soma = array_sum(mb_str_split($soma));
         }
 
         // Converter o nome completo em números usando a tabela deslocada
@@ -1199,20 +1166,20 @@ class NumerologiaCalculos
         $mesNascimento = (int)date('m', strtotime($dataNascimento));
 
         // Reduzir o dia e o mês
-        $diaReducao = array_sum(str_split($diaNascimento));
+        $diaReducao = array_sum(mb_str_split($diaNascimento));
         if ($diaReducao >= 10) {
-            $diaReducao = array_sum(str_split($diaReducao));
+            $diaReducao = array_sum(mb_str_split($diaReducao));
         }
 
-        $mesReducao = array_sum(str_split($mesNascimento));
+        $mesReducao = array_sum(mb_str_split($mesNascimento));
         if ($mesReducao >= 10) {
-            $mesReducao = array_sum(str_split($mesReducao));
+            $mesReducao = array_sum(mb_str_split($mesReducao));
         }
 
         // Somar as reduções e reduzir novamente se necessário
         $reducaoFinal = $diaReducao + $mesReducao;
         if ($reducaoFinal > 9) {
-            $reducaoFinal = array_sum(str_split($reducaoFinal));
+            $reducaoFinal = array_sum(mb_str_split($reducaoFinal));
         }
 
         $tabelaDeslocada = [];
@@ -1255,9 +1222,9 @@ class NumerologiaCalculos
     {
 
         $diaNascimento = (int)date('d', strtotime($dataNascimento));
-        $diaReducao = array_sum(str_split($diaNascimento)); // Reduzir o dia
+        $diaReducao = array_sum(mb_str_split($diaNascimento)); // Reduzir o dia
         if ($diaReducao >= 10) {
-            $diaReducao = array_sum(str_split($diaReducao));
+            $diaReducao = array_sum(mb_str_split($diaReducao));
         }
 
         // Criar uma nova tabela deslocada de acordo com a redução do dia
@@ -1302,9 +1269,9 @@ class NumerologiaCalculos
         // Extrair o mês do nascimento do formato "dd-mm-yyyy"
         $mesNascimento = (int)date('m', strtotime($dataNascimento));
 
-        $mesReducao = array_sum(str_split($mesNascimento)); // Reduzir o mês
+        $mesReducao = array_sum(mb_str_split($mesNascimento)); // Reduzir o mês
         if ($mesReducao >= 10) {
-            $mesReducao = array_sum(str_split($mesReducao));
+            $mesReducao = array_sum(mb_str_split($mesReducao));
         }
 
         // Criar uma nova tabela deslocada de acordo com a redução do mês
@@ -1452,8 +1419,8 @@ class NumerologiaCalculos
         $diaNascimento = (int)date('d', strtotime($dataNascimento));
         $mesNascimento = (int)date('m', strtotime($dataNascimento));
 
-        $diaReducao = array_sum(str_split($diaNascimento)) >= 10 ? array_sum(str_split($diaNascimento)) : '';
-        $mesReducao = array_sum(str_split($mesNascimento)) >= 10 ? array_sum(str_split($mesNascimento)) : '';
+        $diaReducao = array_sum(mb_str_split($diaNascimento)) >= 10 ? array_sum(mb_str_split($diaNascimento)) : '';
+        $mesReducao = array_sum(mb_str_split($mesNascimento)) >= 10 ? array_sum(mb_str_split($mesNascimento)) : '';
         $reducaoFinal = (int)$diaReducao + (int)$mesReducao;
         $reducaoFinal = self::reduzirNumeroSimples($reducaoFinal);
 
@@ -1527,8 +1494,8 @@ class NumerologiaCalculos
         $diaNascimento = (int)date('d', strtotime($dataNascimento));
         $mesNascimento = (int)date('m', strtotime($dataNascimento));
 
-        $diaReducao = array_sum(str_split($diaNascimento)) >= 10 ? array_sum(str_split($diaNascimento)) : '';
-        $mesReducao = array_sum(str_split($mesNascimento)) >= 10 ? array_sum(str_split($mesNascimento)) : '';
+        $diaReducao = array_sum(mb_str_split($diaNascimento)) >= 10 ? array_sum(mb_str_split($diaNascimento)) : '';
+        $mesReducao = array_sum(mb_str_split($mesNascimento)) >= 10 ? array_sum(mb_str_split($mesNascimento)) : '';
         $reducaoFinal = $diaReducao + $mesReducao;
         $reducaoFinal = self::reduzirNumeroSimples($reducaoFinal);
 
@@ -1601,7 +1568,7 @@ class NumerologiaCalculos
     {
         $mesNascimento = (int)date('m', strtotime($dataNascimento));
 
-        $mesReducao = array_sum(str_split($mesNascimento)) >= 10 ? array_sum(str_split($mesNascimento)) : '';
+        $mesReducao = array_sum(mb_str_split($mesNascimento)) >= 10 ? array_sum(mb_str_split($mesNascimento)) : '';
 
         $tabelaDeslocada = [];
         $tamanhoTabela = count($tabelaPiramde);
