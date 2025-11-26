@@ -20,7 +20,7 @@ $numerologia = new Numerologia();
 
 $endereco_options = get_field('vibracoes_endereco', 'option');
 
-$calculo_endereco = $numerologia->calcularEndereco($numero, $endereco);
+$calculo_endereco = $numerologia->calcularEndereco($numero, $endereco, $complemento ?? null);
 $calculo_casa = $numerologia->calcularNumeroCasa($numero);
 
 $texto_endereco = [];

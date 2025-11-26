@@ -53,3 +53,14 @@ Or [deploy with the tool of your choice](https://underscoretw.com/docs/deploymen
   Learn strategies for using Tailwind in theme-specific custom blocks
 * [Setting Up Browsersync](https://underscoretw.com/docs/browsersync/)  
   Add live reloads and synchronized cross-device testing to your workflow
+
+## Integração Hotmart
+
+1. No painel WordPress acesse **Configurações → Integração Hotmart** e marque “Ativar integração”.
+2. Informe o mesmo token (HOTTOK) configurado na Hotmart e escolha o papel padrão atribuído aos clientes aprovados.
+3. Cadastre o webhook na Hotmart apontando para `https://seusite.com/wp-json/numera/v1/hotmart-webhook` e envie o cabeçalho `X-Hotmart-Hottok` com o token.
+4. Eventos suportados:
+   - `approved` / `purchase.approved` → cria/atualiza o usuário e aplica o papel selecionado.
+   - `pending` → registra o usuário e marca o status `hotmart_status=pending`.
+   - `canceled`/`chargeback` → move o usuário para a role `blocked_user`.
+5. Consulte os últimos payloads recebidos nas metadados `hotmart_last_payload` de cada usuário para auditoria.

@@ -279,6 +279,9 @@ include_once get_theme_file_path() . "/inc/handle-map-download.php";
 include_once get_theme_file_path() . "/inc/handle-placa-download.php";
 include_once get_theme_file_path() . "/inc/handle-endereco-download.php";
 include_once get_theme_file_path() . "/inc/handle-empresarial-download.php";
+require get_template_directory() . '/inc/hotmart-integration-settings.php';
+require get_template_directory() . '/inc/class-hotmart-client-sync.php';
+require get_template_directory() . '/inc/hotmart-webhook-endpoint.php';
 
 // Função para bloquear o acesso ao admin para assinantes e redirecioná-los
 function block_wp_admin_access()

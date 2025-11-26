@@ -102,13 +102,32 @@ class NumerologiaCalculos
 
         $somaRua = self::converterNomeRua($nomeRua, $alfabeto);
         $somaNumeroCasa = self::reduzirTeosoficamente($numeroCasa);
+        $resultadoFinal = $somaRua + $somaNumeroCasa;
 
-        if ($numeroApto) {
-            $somaNumeroApto = self::reduzirTeosoficamente($numeroApto);
-            $resultadoFinal = $somaRua + $somaNumeroCasa + $somaNumeroApto;
-        } else {
-            $resultadoFinal = $somaRua + $somaNumeroCasa;
+        if (!empty($numeroApto)) {
+            $numeroApto = trim((string)$numeroApto);
+
+            $digitosComplemento = preg_replace('/\D/', '', $numeroApto);
+            $letrasComplemento = preg_replace('/[^[:alpha:]]/u', '', $numeroApto);
+            $somaNumeroApto = 0;
+
+            if ($digitosComplemento !== '') {
+                $somaNumeroApto += self::reduzirTeosoficamente($digitosComplemento);
+            }
+
+            if ($letrasComplemento !== '') {
+                $somaNumeroApto += self::converterNomeRua($letrasComplemento, $alfabeto);
+            }
+
+            if ($somaNumeroApto === 0 && $numeroApto !== '') {
+                $somaNumeroApto = self::reduzirTeosoficamente($numeroApto);
+            }
+
+            if ($somaNumeroApto > 0) {
+                $resultadoFinal += self::reduzirTeosoficamente($somaNumeroApto);
+            }
         }
+
         return self::reduzirTeosoficamente($resultadoFinal);
     }
     public static function calcularNumeroCasa($numeroCasa) {
