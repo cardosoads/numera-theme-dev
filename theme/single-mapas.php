@@ -49,7 +49,7 @@ get_header();
                                 class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none">
                             Salvar Alterações
                         </button>
-                        <a href="<?php echo add_query_arg('download_docx', '1') ?>"
+                        <a href="<?php echo add_query_arg(['download_docx' => '1', 'post_id' => get_the_ID()]) ?>"
                            class="w-[200px] bg-green-600 text-white text-center py-2 px-4 rounded-md hover:bg-green-700">Gerar Mapa
                         </a>
                     </div>
@@ -265,18 +265,18 @@ get_header();
                                         <a href="#" class="text-blue-600 hover:underline mt-3 block text-right" data-modal="modal-arcano">Ver detalhes</a>
                                     </div>
                                     <div id="modal-arcano" class="modal hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                                        <div class="bg-white p-6 rounded-2xl shadow-lg max-w-4xl w-full">
+                                        <div class="bg-white p-6 rounded-2xl shadow-lg max-w-4xl w-full">                                                                                                                                                                                                                                                                                                                                                           
                                             <h2 class="text-2xl font-semibold text-gray-900 mb-4">Seu arcano atual é o <?php echo esc_html($arcanoAtual['arcano']); ?></h2>
                                             <div class="flex gap-4 items-center">
                                                 <?php
-                                                $dados = [];
+                                                $dados = [];                                                                                                                                                                                                                                                                                                                                                                                                                                            
                                                 foreach ($arcano_basicavida_options as $arcano) {
                                                     if ($arcano['numero_arcano_basicavida'] == $arcanoAtual['arcano']) {
-                                                        $dados = $arcano;
+                                                        $dados = $arcano;                                                                                                                                                                                                                                                                                                                                                                                                                                           
                                                     }
                                                 }
                                                 ?>
-                                                <img src="<?php echo esc_url($dados['imagem_arcano']); ?>" alt="Imagem Arcano" class="w-1/3 rounded-lg shadow-md">
+                                                <img src="<?php echo esc_url($dados['imagem_arcano']); ?>" alt="Imagem Arcano" class="w-1/3 rounded-lg shadow-md">                                                                                                                                                                                                                                                              
                                                 <p class="text-gray-700 leading-relaxed"><?php echo esc_html($dados['texto_arcano_basicavida']); ?></p>
                                             </div>
                                             <div class="flex justify-end mt-4">

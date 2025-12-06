@@ -8,6 +8,15 @@
  * @package numera_theme
  */
 
+// Suprimir warnings/notices do ACF que são gerados muito cedo
+// Isso evita o erro "headers already sent" ao fazer redirects
+add_filter('doing_it_wrong_trigger_error', function($trigger, $function) {
+    if ($function === '_load_textdomain_just_in_time') {
+        return false;
+    }
+    return $trigger;
+}, 10, 2);
+
 if (! defined('NUMERA_THEME_VERSION')) {
 	/*
      * Set the theme’s version number.
@@ -259,7 +268,11 @@ require get_template_directory() . '/inc/Numerologia.php';
 // Função para restringir o acesso a membros logados
 function restrict_access_to_members()
 {
-	if (!is_user_logged_in() && !is_page('login')) {
+	// Verificar se já está na página de login (por URL ou por slug)
+	$request_uri = $_SERVER['REQUEST_URI'] ?? '';
+	$is_login_page = is_page('login') || strpos($request_uri, '/login') !== false;
+	
+	if (!is_user_logged_in() && !$is_login_page) {
 		wp_redirect(site_url('/login/'));
 		exit();
 	}
@@ -271,17 +284,16 @@ require get_template_directory() . '/inc/custom-posts.php';
 
 // Controla as requisições AJAX do tema
 include get_theme_file_path() . "/inc/numera-ajax-requests.php";
-
-require_once get_template_directory() . '/../vendor/autoload.php';
-//require_once get_template_directory() . '/vendor/autoload.php';
+if (file_exists(get_template_directory() . '/../vendor/autoload.php')) {
+    require_once get_template_directory() . '/../vendor/autoload.php';
+} elseif (file_exists(get_template_directory() . '/vendor/autoload.php')) {
+    require_once get_template_directory() . '/vendor/autoload.php';
+}
 
 include_once get_theme_file_path() . "/inc/handle-map-download.php";
 include_once get_theme_file_path() . "/inc/handle-placa-download.php";
 include_once get_theme_file_path() . "/inc/handle-endereco-download.php";
 include_once get_theme_file_path() . "/inc/handle-empresarial-download.php";
-require get_template_directory() . '/inc/hotmart-integration-settings.php';
-require get_template_directory() . '/inc/class-hotmart-client-sync.php';
-require get_template_directory() . '/inc/hotmart-webhook-endpoint.php';
 
 // Função para bloquear o acesso ao admin para assinantes e redirecioná-los
 function block_wp_admin_access()

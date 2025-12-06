@@ -26,7 +26,7 @@ function download_empresarial_docx()
         // Desafios
         add_text_desafios($section, $resultado_desafios_empresarial);
         // ciclos de vida
-        add_text_cycles_content_section ($section);
+        add_text_cycles_content_section($section);
         //add_cycles_text_section($section, $ciclos);
         add_cycles($section, $ciclos_textos_empresa);
         //momentos decisivos
@@ -42,12 +42,13 @@ function download_empresarial_docx()
         send_php_word_docx($phpWord, 'analise_empresa');
     }
 }
-function add_name_section($section, $razao_social, $data_abertura) {
+function add_name_section($section, $razao_social, $data_abertura)
+{
     $titleStyle = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
-    $heading2Style = ['name' => 'Arial', 'size' => 22, 'bold' => true, 'color'=> '000000'];
-    $heading3Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color'=> '000000'];
+    $heading2Style = ['name' => 'Arial', 'size' => 22, 'bold' => true, 'color' => '000000'];
+    $heading3Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color' => '000000'];
     $paragraphStyle = ['name' => 'Arial', 'size' => 12, 'color' => '333333'];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
 
@@ -62,7 +63,7 @@ Ajuda a analisar as compatibilidades dos proprietários, executivos e ocupantes 
     $section->addText("A organização empresarial agrupa pessoas em torno de um ideal, com objetivos definidos pelos seus proprietários; portanto, para que seja bem sucedida e progrida, será necessário que haja harmonia e a mais ampla sintonia entre todos. Por esse motivo é necessário um estudo detalhado dentro da Numerologia Cabalística Empresarial para harmonizar as pessoas em suas equipes, as equipes na empresa e a empresa com os seus propósitos.
  ", $paragraphStyle2, $paragraphStyleJustify);
     $section->addTextBreak(2);
-    $section->addText("Bem vindo(a) ao seu Mapa Empresárial",$heading2Style,$heading2StyleJustify );
+    $section->addText("Bem vindo(a) ao seu Mapa Empresárial", $heading2Style, $heading2StyleJustify);
     $section->addTextBreak(2);
     // Convertendo a data para o formato dd/mm/yyyy dentro da função
     if ($data_abertura && $data_abertura !== "0000-00-00") {
@@ -72,31 +73,32 @@ Ajuda a analisar as compatibilidades dos proprietários, executivos e ocupantes 
     }
 
     $section->addText("Razão Social da Empresa: $razao_social", $titleStyle);
-    $section->addText("Data de Abertura " .  $data_nascimento_formatada, $paragraphStyle, $paragraphStyleJustify);
+    $section->addText("Data de Abertura " . $data_nascimento_formatada, $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
 }
 
 function add_area_atuacao($section, $nome_area)
 {
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240, 'lineHeight' => '1.2em']; // alinhamento dos textos
-    $paragraphStyle3 = ['name' => 'Arial', 'bold'=>  true, 'size' => 12, 'color'=> '000000']; // formatação dos dados do ACF e dos Funções do Sistema
+    $paragraphStyle3 = ['name' => 'Arial', 'bold' => true, 'size' => 12, 'color' => '000000']; // formatação dos dados do ACF e dos Funções do Sistema
 
     $section->addText("Área de Atuação: $nome_area", $paragraphStyle3, $paragraphStyleWithSpacing);
 }
-function add_calculations_text_razao($section, $motivacao_razao, $motivacao_razao_content, $expressao_razao, $expressao_razao_content, $impressao_razao, $impressao_razao_content) {
+function add_calculations_text_razao($section, $motivacao_razao, $motivacao_razao_content, $expressao_razao, $expressao_razao_content, $impressao_razao, $impressao_razao_content)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240, 'lineHeight' => '1.2em']; // alinhamento dos textos
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação do subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados do ACF e dos Funções do Sistema
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados do ACF e dos Funções do Sistema
 
     $section->addText("Motivação", $paragraphStyle2);
-    $section->addText("Mostra o que a Empresa ou Negócio busca no mercado. É a alma do negócio. É muito importante que este número seja compatível com a área de atuação da Empresa ou Negócio.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("Mostra o que a Empresa ou Negócio busca no mercado. É a alma do negócio. É muito importante que este número seja compatível com a área de atuação da Empresa ou Negócio.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de Motivação - $motivacao_razao: $motivacao_razao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addText("Expressão", $paragraphStyle2);
-    $section->addText("Revela a ação da Empresa ou Negócio no mercado; como se relaciona com seus clientes. Este número deve ser compatível com o fluxo de clientes para a Empresa ou Negócio.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("Revela a ação da Empresa ou Negócio no mercado; como se relaciona com seus clientes. Este número deve ser compatível com o fluxo de clientes para a Empresa ou Negócio.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de Expressão - $expressao_razao: $expressao_razao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addText("Impressão", $paragraphStyle2);
-    $section->addText("É como a Empresa ou Negócio é visto pelo cliente, pelo consumidor e pelo mercado de modo geral. Deve ser um número compatível com a área de atuação da Empresa/Negócio ou pelo menos que seja compatível com a atividade desenvolvida para que o consumidor a reconheça e a visualize.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("É como a Empresa ou Negócio é visto pelo cliente, pelo consumidor e pelo mercado de modo geral. Deve ser um número compatível com a área de atuação da Empresa/Negócio ou pelo menos que seja compatível com a atividade desenvolvida para que o consumidor a reconheça e a visualize.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de Impressão - $impressao_razao: $impressao_razao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
 
 }
@@ -107,10 +109,10 @@ function add_text_desafios($section, $resultado_desafios_empresarial)
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyle4 = ['name' => 'Arial', 'size' => 12, 'color' => '#ED1C24']; // orientacao
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação do subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados do ACF e dos Funções do Sistema
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados do ACF e dos Funções do Sistema
 
     $section->addText("Desafio", $paragraphStyle2);
-    $section->addText("Revela qual será o Destino do Empresa/Negócio com suas influências positivas ou negativas. É a meta na qual a Empresa/Negócio se propõe.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("Revela qual será o Destino do Empresa/Negócio com suas influências positivas ou negativas. É a meta na qual a Empresa/Negócio se propõe.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addTextBreak(1);
 
     // Percorre os desafios e adiciona ao documento
@@ -119,20 +121,21 @@ function add_text_desafios($section, $resultado_desafios_empresarial)
             $section->addText("Desafio " . $desafio['numero'], $paragraphStyleNumber);
             $section->addText($desafio['descricao'], $paragraphStyle3, $paragraphStyleJustify);
             $section->addTextBreak(1);
-            $section->addText("Orientação: ". $desafio['orentacao'], $paragraphStyle4, $paragraphStyleJustify);
+            $section->addText("Orientação: " . $desafio['orentacao'], $paragraphStyle4, $paragraphStyleJustify);
             $section->addTextBreak(1); // Adiciona um espaço entre os desafios
         }
     }
 }
-function add_text_destiny_mission_section($section, $destino, $destino_empresarial_content, $missao, $missao_empresarial_content) {
+function add_text_destiny_mission_section($section, $destino, $destino_empresarial_content, $missao, $missao_empresarial_content)
+{
 
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=>  true]; // formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação do subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
     $section->addText("Destino", $paragraphStyle2);
-    $section->addText("Este é um dos números mais importantes do Mapa Numerológico. Ele descreve as influências na personalidade, oportunidades e os obstáculos que uma empresa irá encontrar ao longo da sua existência. Indica, ainda, as alternativas disponíveis e o provável resultado de cada uma delas. ", $paragraphStyle,$paragraphStyleWithSpacing);
+    $section->addText("Este é um dos números mais importantes do Mapa Numerológico. Ele descreve as influências na personalidade, oportunidades e os obstáculos que uma empresa irá encontrar ao longo da sua existência. Indica, ainda, as alternativas disponíveis e o provável resultado de cada uma delas. ", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Destino - $destino: $destino_empresarial_content ", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addText("Missão", $paragraphStyle2);
     $section->addText("A missão empresarial vai além de metas comerciais e estratégias de mercado — ela representa o propósito essencial da empresa no mundo, o porquê de sua existência sob uma perspectiva energética e espiritual. Cada empresa carrega uma vibração específica determinada pelo nome empresarial e sua data de fundação. Esses elementos, ao serem convertidos em números por meio da tabela cabalística, revelam a Missão Empresarial, também conhecida como Número de Destino. Esse número indica o caminho que a empresa deve trilhar para se alinhar com seu verdadeiro propósito e obter sucesso duradouro.", $paragraphStyle, $paragraphStyleWithSpacing);
@@ -140,16 +143,16 @@ function add_text_destiny_mission_section($section, $destino, $destino_empresari
 }
 function add_energies_section($section, $dias_favoraveis, $numeros_harmonicos)
 {
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; // formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
 
     // dias favoraveis
-    $section->addText("Números Harmônicos " ,$paragraphStyle2);
+    $section->addText("Números Harmônicos ", $paragraphStyle2);
     $section->addTextBreak(1);
-    $section->addText("Revelam quais são os números que você possui harmonia, sendo bastante uteis para verificar contas bancárias, sociedades, números de telefone, etc. .",$paragraphStyle, $paragraphStyleJustify );
+    $section->addText("Revelam quais são os números que você possui harmonia, sendo bastante uteis para verificar contas bancárias, sociedades, números de telefone, etc. .", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
 
     if (is_array($numeros_harmonicos)) {
@@ -159,8 +162,8 @@ function add_energies_section($section, $dias_favoraveis, $numeros_harmonicos)
     }
     // numeros harmonicos
     $section->addTextBreak(1);
-    $section->addText("Dias Favoráveis "  ,$paragraphStyle2);
-    $section->addText("São considerados os seus “dias da sorte”, sendo favoráveis para realizar coisas importantes. Porém, é importante checar se o mês e o ano pessoal também se encontram favoráveis à determinadas situações.",$paragraphStyle, $paragraphStyleJustify );
+    $section->addText("Dias Favoráveis ", $paragraphStyle2);
+    $section->addText("São considerados os seus “dias da sorte”, sendo favoráveis para realizar coisas importantes. Porém, é importante checar se o mês e o ano pessoal também se encontram favoráveis à determinadas situações.", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
     if (is_array($dias_favoraveis)) {
         $section->addText(join(", ", $dias_favoraveis), $paragraphStyle3);
@@ -215,7 +218,7 @@ function add_cycles($section, $ciclos)
 {
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
 
     if (!empty($ciclos) && is_array($ciclos)) {
         $dataNascimento = null; // Para guardar a data de nascimento (início do primeiro ciclo)
@@ -281,7 +284,7 @@ function add_moment($section, $textos_momentos)
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
     $paragraphStyle4 = ['name' => 'Arial', 'size' => 10, 'color' => 'D2122E', 'italic' => true]; //formatação da descrição
 
@@ -289,7 +292,7 @@ function add_moment($section, $textos_momentos)
 
     $section->addText("Momentos Decisivos", $paragraphStyle2);
     $section->addText("A vida de uma empresa é marcada por quatro momentos decisivos, que indicam fases de mudanças importantes, oportunidades e desafios. Cada momento é calculado a partir da data de fundação da empresa e revela tendências que precisam ser compreendidas e bem aproveitadas para o sucesso e longevidade do negócio.", $paragraphStyle, $paragraphStyleWithSpacing);
-    $section->addText("ATENÇÃO: Verifique se tem alguma relação dos números abaixo com o seu Momento Decisivo. Motivação: 1 - Expressão: 11 - Destino: 11",$paragraphStyle4, $paragraphStyleWithSpacing );
+    $section->addText("ATENÇÃO: Verifique se tem alguma relação dos números abaixo com o seu Momento Decisivo. Motivação: 1 - Expressão: 11 - Destino: 11", $paragraphStyle4, $paragraphStyleWithSpacing);
     $section->addTextBreak(1);
     // Itera sobre os momentos decisivos e adiciona o número e texto correspondentes
     $count = 0;
@@ -297,47 +300,49 @@ function add_moment($section, $textos_momentos)
         $numero = $momento['numero'];
         $texto = $momento['texto'];
         $count++;
-        if($count == 1){
+        if ($count == 1) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("É o início da trajetória. Representa a formação, a identidade e os primeiros aprendizados da empresa. Nessa fase, os desafios estão ligados à estruturação, definição de propósito e primeiros passos no mercado. É o momento de plantar as bases sólidas para o futuro.",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("É o início da trajetória. Representa a formação, a identidade e os primeiros aprendizados da empresa. Nessa fase, os desafios estão ligados à estruturação, definição de propósito e primeiros passos no mercado. É o momento de plantar as bases sólidas para o futuro.", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }elseif ($count == 2) {
+        } elseif ($count == 2) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("Fase de crescimento e consolidação. Aqui a empresa já possui alguma estabilidade, mas também precisa lidar com expansão, concorrência e amadurecimento dos processos internos. As escolhas feitas aqui são fundamentais para determinar a direção que o negócio seguirá.",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("Fase de crescimento e consolidação. Aqui a empresa já possui alguma estabilidade, mas também precisa lidar com expansão, concorrência e amadurecimento dos processos internos. As escolhas feitas aqui são fundamentais para determinar a direção que o negócio seguirá.", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }elseif($count == 3) {
+        } elseif ($count == 3) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("É o auge do ciclo. A empresa atinge sua plena capacidade, colhendo os frutos dos investimentos e esforços anteriores. É o período ideal para ampliar projetos, fortalecer a marca e explorar novas oportunidades. Também é uma fase de responsabilidade e liderança no mercado.",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("É o auge do ciclo. A empresa atinge sua plena capacidade, colhendo os frutos dos investimentos e esforços anteriores. É o período ideal para ampliar projetos, fortalecer a marca e explorar novas oportunidades. Também é uma fase de responsabilidade e liderança no mercado.", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }elseif($count == 4) {
+        } elseif ($count == 4) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("Marca a fase de transformação ou encerramento de um ciclo. Pode ser o momento de renovação, sucessão ou até reestruturação profunda. O foco aqui é garantir a continuidade, inovar para se adaptar às novas exigências ou, em alguns casos, preparar uma transição honrosa.",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("Marca a fase de transformação ou encerramento de um ciclo. Pode ser o momento de renovação, sucessão ou até reestruturação profunda. O foco aqui é garantir a continuidade, inovar para se adaptar às novas exigências ou, em alguns casos, preparar uma transição honrosa.", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }else{
+        } else {
             echo "Erro";
         }
     }
     $section->addTextBreak(1);
 }
-function add_fantasia_section($section, $nome_fantasia) {
+function add_fantasia_section($section, $nome_fantasia)
+{
     $titleStyle = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
     $section->addText("Nome Fantasia da Empresa: $nome_fantasia", $titleStyle);
     $section->addTextBreak(1);
 }
-function add_calculations_text_fantasia($section, $motivacao_razao, $motivacao_razao_content, $expressao_razao, $expressao_razao_content, $impressao_razao, $impressao_razao_content) {
+function add_calculations_text_fantasia($section, $motivacao_razao, $motivacao_razao_content, $expressao_razao, $expressao_razao_content, $impressao_razao, $impressao_razao_content)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240, 'lineHeight' => '1.2em']; // alinhamento dos textos
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação do subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados do ACF e dos Funções do Sistema
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados do ACF e dos Funções do Sistema
 
     $section->addText("Motivação", $paragraphStyle2);
-    $section->addText("Mostra o que a Empresa ou Negócio busca no mercado. É a alma do negócio. É muito importante que este número seja compatível com a área de atuação da Empresa ou Negócio.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("Mostra o que a Empresa ou Negócio busca no mercado. É a alma do negócio. É muito importante que este número seja compatível com a área de atuação da Empresa ou Negócio.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de Motivação - $motivacao_razao: $motivacao_razao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addText("Expressão", $paragraphStyle2);
-    $section->addText("Revela a ação da Empresa ou Negócio no mercado; como se relaciona com seus clientes. Este número deve ser compatível com o fluxo de clientes para a Empresa ou Negócio.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("Revela a ação da Empresa ou Negócio no mercado; como se relaciona com seus clientes. Este número deve ser compatível com o fluxo de clientes para a Empresa ou Negócio.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de Expressão - $expressao_razao: $expressao_razao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addText("Impressão", $paragraphStyle2);
-    $section->addText("É como a Empresa ou Negócio é visto pelo cliente, pelo consumidor e pelo mercado de modo geral. Deve ser um número compatível com a área de atuação da Empresa/Negócio ou pelo menos que seja compatível com a atividade desenvolvida para que o consumidor a reconheça e a visualize.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("É como a Empresa ou Negócio é visto pelo cliente, pelo consumidor e pelo mercado de modo geral. Deve ser um número compatível com a área de atuação da Empresa/Negócio ou pelo menos que seja compatível com a atividade desenvolvida para que o consumidor a reconheça e a visualize.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de Impressão - $impressao_razao: $impressao_razao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
 
 }

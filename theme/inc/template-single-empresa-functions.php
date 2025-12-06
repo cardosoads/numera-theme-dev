@@ -45,42 +45,44 @@ if (is_array($area_completa) && !empty($area_completa)) {
 $numerologia = new Numerologia(); // extenssão 
 // razao social
 $expressao_razao = $numerologia->calcularNumeroExpressao($razao_social);
-$expressao_options = get_field('expressao_empresarial', 'option');
+$expressao_options = get_field('expressao_empresarial', 'option') ?: [];
 $expressao_razao_content = getUserCalculusResultContent($expressao_options, $expressao_razao, "", 'numero', 'descricao');
 $impressao_razao = $numerologia->calcularNumeroImpressao($razao_social);
-$impressao_options = get_field('impressao_empresarial', 'option');
+$impressao_options = get_field('impressao_empresarial', 'option') ?: [];
 $impressao_razao_content = getUserCalculusResultContent($impressao_options,$impressao_razao, "", 'numero', 'descricao' );
 $motivacao_razao = $numerologia->calcularNumeroMotivacao($razao_social);
-$motivacao_options = get_field('motivacao_empresarial', 'option');
+$motivacao_options = get_field('motivacao_empresarial', 'option') ?: [];
 $motivacao_razao_content = getUserCalculusResultContent($motivacao_options, $motivacao_razao, "", 'numero', 'texto');
 
 
 // data abertura
 $desafios = $numerologia->carcularDesafios ($data_abertura);
-$desafios_content = get_field('desafio_empresarial', 'option');
+$desafios_content = get_field('desafio_empresarial', 'option') ?: [];
 $desafio_empresarial_content = getUserCalculusResultContent($desafios_content, $desafios, " ", 'numero', 'descricao');
 $resultado_desafios_empresarial = [];
 
-foreach ($desafios as $key => $numero) {
-    foreach ($desafios_content as $item) {
-        if ($item['numero'] == $numero) {
-            $resultado_desafios_empresarial[] = $item;
+if (is_array($desafios_content)) {
+    foreach ($desafios as $key => $numero) {
+        foreach ($desafios_content as $item) {
+            if (isset($item['numero']) && $item['numero'] == $numero) {
+                $resultado_desafios_empresarial[] = $item;
+            }
         }
     }
 }
-$destino_options = get_field('destino_empresarial', 'option');
+$destino_options = get_field('destino_empresarial', 'option') ?: [];
 $destino = $numerologia->calcularNumeroDestino($data_abertura);
 $destino_empresarial_content = getUserCalculusResultContent($destino_options, $destino, " ", 'numero_destino', 'texto_destino');
 $missao = $numerologia->calcularNumeroMissao ($destino, $expressao_razao);
-$missao_options = get_field('missao_empresarial', 'option');
+$missao_options = get_field('missao_empresarial', 'option') ?: [];
 
 //$licoes_carmicas = explode(', ' ,$numerologia->calcularLicoesCarmicas($razao_social));
 $licoes_carmicas = $numerologia->calcularLicoesCarmicas($razao_social);  // sem explode
 $ciclos = $numerologia->calcularCiclos ($data_abertura, $licoes_carmicas); //lições carmicas?
 // As opções dos ciclos obtidas
-$primeiro_ciclo_empresarial_options = get_field('primeiro_ciclo', 'option');
-$segundo_ciclo_empresarial_options = get_field('segundo_ciclo', 'option');
-$terceiro_empresarial_options = get_field('terceiro_ciclo', 'option');
+$primeiro_ciclo_empresarial_options = get_field('primeiro_ciclo', 'option') ?: [];
+$segundo_ciclo_empresarial_options = get_field('segundo_ciclo', 'option') ?: [];
+$terceiro_empresarial_options = get_field('terceiro_ciclo', 'option') ?: [];
 $ciclos_textos = [
     'ciclo_1' => extrairTextos($primeiro_ciclo_empresarial_options, 'numero', 'texto'),
     'ciclo_2' => extrairTextos($segundo_ciclo_empresarial_options, 'numero', 'texto'),
@@ -89,7 +91,7 @@ $ciclos_textos = [
 $ciclos_textos_empresa = gerarCiclosComTexto($ciclos, $ciclos_textos);
 
 $momentos_decisivos = $numerologia->momentosDecisivos ($data_abertura, $ciclos['fim_primeiro_ciclo']);
-$momentos_decisivos_options = get_field('momentos', 'option');
+$momentos_decisivos_options = get_field('momentos', 'option') ?: [];
 $numeros_momentos = array_filter(
     $momentos_decisivos,
     function ($key) {
@@ -99,10 +101,12 @@ $numeros_momentos = array_filter(
 );
 
 $textos_momentos = [];
-foreach ($numeros_momentos as $key => $numero) {
-    foreach ($momentos_decisivos_options as $momento) {
-        if ((int) $momento['numero'] === $numero) {
-            $textos_momentos[] = $momento;
+if (is_array($momentos_decisivos_options)) {
+    foreach ($numeros_momentos as $key => $numero) {
+        foreach ($momentos_decisivos_options as $momento) {
+            if (isset($momento['numero']) && (int) $momento['numero'] === $numero) {
+                $textos_momentos[] = $momento;
+            }
         }
     }
 }
@@ -111,7 +115,9 @@ foreach ($numeros_momentos as $key => $numero) {
     $momento_decisivo_numero[] = $numero;
 }
 $numeros_harmonicos = $numerologia->numerosHarmonicos($data_abertura);
-$dias_favoraveis = explode(', ', $numerologia->obterDiasFavoraveis($data_abertura));
+// obterDiasFavoraveis já retorna um array, não precisa de explode
+$dias_favoraveis_result = $numerologia->obterDiasFavoraveis($data_abertura);
+$dias_favoraveis = is_array($dias_favoraveis_result) ? $dias_favoraveis_result : (is_string($dias_favoraveis_result) ? explode(', ', $dias_favoraveis_result) : []);
 $missao_empresarial_content = getUserCalculusResultContent($missao_options, $missao, "", 'numero', 'descricao');
 
 
@@ -125,12 +131,14 @@ $motivacao_fantasia_content = getUserCalculusResultContent($motivacao_options, $
 
 // data alteracao
 $destino_alteracao = $numerologia->calcularNumeroDestino($data_alteracao);
-$missao_alteracao = $numerologia->calcularNumeroMissao ($destino_alteracao, $expressao);
+$missao_alteracao = $numerologia->calcularNumeroMissao ($destino_alteracao, $expressao_razao);
 $desafios_alteracao = $numerologia->carcularDesafios ($data_alteracao);
 $ciclos_alteracao = $numerologia->calcularCiclos ($data_alteracao, $licoes_carmicas); //lições carmicas?
 $momentos_decisivos_alteracao = $numerologia->momentosDecisivos ($data_alteracao, $ciclos_alteracao['fim_primeiro_ciclo']);
 $numeros_harmonicos_alteracao = $numerologia->numerosHarmonicos($data_alteracao);
-$dias_favoraveis_alteracao = explode(', ', $numerologia->obterDiasFavoraveis($data_alteracao));
+// obterDiasFavoraveis já retorna um array, não precisa de explode
+$dias_favoraveis_alteracao_result = $numerologia->obterDiasFavoraveis($data_alteracao);
+$dias_favoraveis_alteracao = is_array($dias_favoraveis_alteracao_result) ? $dias_favoraveis_alteracao_result : (is_string($dias_favoraveis_alteracao_result) ? explode(', ', $dias_favoraveis_alteracao_result) : []);
 
 function gerarCiclosComTexto($ciclos, $ciclos_textos) {
     $result = [];
@@ -154,18 +162,32 @@ function extrairTextos($ciclo_options, $numero_chave, $texto_chave)
 {
     $textos_ciclo = [];
 
+    // Verificar se é um array válido
+    if (!is_array($ciclo_options)) {
+        return $textos_ciclo;
+    }
+
     // Iterando sobre os dados de ciclo e organizando por número e texto
     foreach ($ciclo_options as $item) {
-        // Adiciona ao array com o número como chave e o texto como valor
-        $textos_ciclo[$item[$numero_chave]] = $item[$texto_chave];
+        // Verificar se as chaves existem antes de acessar
+        if (isset($item[$numero_chave]) && isset($item[$texto_chave])) {
+            // Adiciona ao array com o número como chave e o texto como valor
+            $textos_ciclo[$item[$numero_chave]] = $item[$texto_chave];
+        }
     }
 
     return $textos_ciclo;
 }
 function getUserCalculusResultContent($options, $numero, $content, $index, $select_index)
 {
+    // Verificar se options é um array válido
+    if (!is_array($options)) {
+        return $content;
+    }
+
     foreach ($options as $option):
-        if ($option[$index] == $numero):
+        // Verificar se as chaves existem
+        if (isset($option[$index]) && isset($option[$select_index]) && $option[$index] == $numero):
             $content = $option[$select_index];
             break;
         endif;
@@ -216,13 +238,17 @@ function renderizarBloco($id, $titulo, $valor, $modal, $opcoes, $tipoOpcao) {
         </a>
     </div>
 
-    <?php foreach ($opcoes as $opcao): ?>
-        <?php if ($opcao[$tipoOpcao] == $valor):
-            $tipo_opcao = explode('_', $tipoOpcao);
-        ?>
-            <?php render_modal($modal, $valor, $opcao['texto' . $tipo_opcao[1]] ); ?>
-        <?php endif; ?>
-    <?php endforeach;
+    <?php 
+    if (is_array($opcoes)) {
+        foreach ($opcoes as $opcao): ?>
+            <?php if (isset($opcao[$tipoOpcao]) && $opcao[$tipoOpcao] == $valor):
+                $tipo_opcao = explode('_', $tipoOpcao);
+                $texto_key = 'texto' . (isset($tipo_opcao[1]) ? $tipo_opcao[1] : '');
+            ?>
+                <?php render_modal($modal, $valor, $opcao[$texto_key] ?? ''); ?>
+            <?php endif; ?>
+        <?php endforeach;
+    }
 }
 function renderizarBlocoDois($id, $titulo, $valor, $modal, $opcoes, $tipoOpcao) {
     ?>
@@ -244,13 +270,17 @@ function renderizarBlocoDois($id, $titulo, $valor, $modal, $opcoes, $tipoOpcao) 
         </a>
     </div>
 
-    <?php foreach ($opcoes as $opcao): ?>
-        <?php if ($opcao[$tipoOpcao] == $valor):
-            $tipo_opcao = explode('_', $tipoOpcao);
-            ?>
-            <?php render_modal($modal, $valor, $opcao['descricao' . $tipo_opcao[1]] ); ?>
-        <?php endif; ?>
-    <?php endforeach;
+    <?php 
+    if (is_array($opcoes)) {
+        foreach ($opcoes as $opcao): ?>
+            <?php if (isset($opcao[$tipoOpcao]) && $opcao[$tipoOpcao] == $valor):
+                $tipo_opcao = explode('_', $tipoOpcao);
+                $descricao_key = 'descricao' . (isset($tipo_opcao[1]) ? $tipo_opcao[1] : '');
+                ?>
+                <?php render_modal($modal, $valor, $opcao[$descricao_key] ?? ''); ?>
+            <?php endif; ?>
+        <?php endforeach;
+    }
 }
 
 function renderizarBlocoTres($id, $titulo, $valor, $modal, $opcoes, $tipoOpcao) {
@@ -273,16 +303,26 @@ function renderizarBlocoTres($id, $titulo, $valor, $modal, $opcoes, $tipoOpcao) 
         </a>
     </div>
 
-    <?php foreach ($opcoes as $opcao): ?>
-        <?php if ($opcao[$tipoOpcao] == $valor): ?>
-            <!-- Acessa o 'texto_destino' baseado no 'numero_destino' -->
-            <?php render_modal($modal, $valor, $opcao['texto_destino']); ?>
-        <?php endif; ?>
-    <?php endforeach;
+    <?php 
+    if (is_array($opcoes)) {
+        foreach ($opcoes as $opcao): ?>
+            <?php if (isset($opcao[$tipoOpcao]) && $opcao[$tipoOpcao] == $valor): ?>
+                <!-- Acessa o 'texto_destino' baseado no 'numero_destino' -->
+                <?php render_modal($modal, $valor, $opcao['texto_destino'] ?? ''); ?>
+            <?php endif; ?>
+        <?php endforeach;
+    }
 }
 
 
 function renderizarNumerosHarmonicos($titulo, $numerosHarmonicos, $modal = null) {
+    // Garantir que temos um array válido
+    if (is_string($numerosHarmonicos) && !empty($numerosHarmonicos)) {
+        $numerosHarmonicos = explode(', ', $numerosHarmonicos);
+    }
+    if (!is_array($numerosHarmonicos)) {
+        $numerosHarmonicos = [];
+    }
     ?>
     <div class="flex items-center w-full gap-4 mb-4 p-4 border border-gray-300 rounded-lg shadow-md bg-white">
         <!-- Título -->
@@ -290,11 +330,15 @@ function renderizarNumerosHarmonicos($titulo, $numerosHarmonicos, $modal = null)
 
         <!-- Números Harmônicos -->
         <div class="flex flex-wrap gap-2">
-            <?php foreach ($numerosHarmonicos as $num): ?>
-                <span class="bg-gray-100 text-purple-700 border border-purple-300 rounded-full px-3 py-1 text-sm font-medium shadow-sm">
-                <?= $num ?>
-            </span>
-            <?php endforeach; ?>
+            <?php if (!empty($numerosHarmonicos)): ?>
+                <?php foreach ($numerosHarmonicos as $num): ?>
+                    <span class="bg-gray-100 text-purple-700 border border-purple-300 rounded-full px-3 py-1 text-sm font-medium shadow-sm">
+                    <?= $num ?>
+                </span>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <span class="text-gray-500 text-sm">Nenhum resultado disponível</span>
+            <?php endif; ?>
         </div>
     </div>
 

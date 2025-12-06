@@ -2,12 +2,35 @@
 include_once __DIR__ . "/Numerologia.php";
 include_once __DIR__ . "/NumerologiaDados.php";
 
+// Função helper para proteger get_field
+function safe_get_field($field_name, $post_id = false, $default = []) {
+    // Verificar se a função get_field existe (ACF ativo)
+    if (!function_exists('get_field')) {
+        error_log('ACF get_field não disponível ao tentar acessar: ' . $field_name);
+        return $default;
+    }
+    
+    $result = get_field($field_name, $post_id);
+    return ($result !== false && $result !== null) ? $result : $default;
+}
 
-$post_meta = get_post_meta(get_the_ID());
+// Inicializar variáveis
+$nome_completo = '';
+$data_nascimento = '';
 
-if ($post_meta !== "") {
-    $nome_completo = $post_meta['mapas_details__mapas_nome_completo'][0];
-    $data_nascimento = $post_meta['mapas_details__mapas_data_nascimento'][0];
+// Determinar o post ID correto (da URL ou do contexto)
+$post_id = isset($_GET['post_id']) ? intval($_GET['post_id']) : get_the_ID();
+
+// Log para debug
+if (isset($_GET['download_docx'])) {
+    error_log('Post ID usado para DOCX: ' . $post_id . ' | get_the_ID(): ' . get_the_ID() . ' | $_GET[post_id]: ' . (isset($_GET['post_id']) ? $_GET['post_id'] : 'não definido'));
+}
+
+$post_meta = get_post_meta($post_id);
+
+if ($post_meta !== "" && is_array($post_meta)) {
+    $nome_completo = isset($post_meta['mapas_details__mapas_nome_completo'][0]) ? $post_meta['mapas_details__mapas_nome_completo'][0] : '';
+    $data_nascimento = isset($post_meta['mapas_details__mapas_data_nascimento'][0]) ? $post_meta['mapas_details__mapas_data_nascimento'][0] : '';
 }
 
 $post_meta = NULL;
@@ -20,6 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Se os valores foram enviados via POST, substitua os valores padrão
     $nome_completo = !empty($nome_completo_post) ? $nome_completo_post : $nome_completo;
     $data_nascimento = !empty($data_nascimento_post) ? $data_nascimento_post : $data_nascimento;
+}
+
+// Validar dados essenciais antes de prosseguir
+if (empty($nome_completo) || empty($data_nascimento)) {
+    throw new Exception('Dados de numerologia incompletos. Nome: "' . $nome_completo . '", Data: "' . $data_nascimento . '"');
 }
 
 // Dados
@@ -71,20 +99,24 @@ $atrai = $harmonia_conjugal['atrai'];
 $e_oposto = $harmonia_conjugal['e_oposto'];
 $e_passivo_em_relacao_a = $harmonia_conjugal['e_passivo_em_relação_a'];
 
-$hamonia_conjugal_options = get_field('hamonia_conjugal', 'option');
+$hamonia_conjugal_options = safe_get_field('hamonia_conjugal', 'option');
 $texto_hamononia_conjugal = [];
-foreach ($hamonia_conjugal_options as $item) {
-    if ($item['numero_hamonia_conjugal'] == $harmonia) {
-        $texto_hamononia_conjugal = $item['texto_hamonia_conjugal'];
-        break; // para o loop, pois já encontramos o valor desejado
+if (is_array($hamonia_conjugal_options)) {
+    foreach ($hamonia_conjugal_options as $item) {
+        if (isset($item['numero_hamonia_conjugal']) && $item['numero_hamonia_conjugal'] == $harmonia) {
+            $texto_hamononia_conjugal = $item['texto_hamonia_conjugal'] ?? [];
+            break; // para o loop, pois já encontramos o valor desejado
+        }
     }
 }
 
 $texto_vibra_com = [];
-foreach ($hamonia_conjugal_options as $item) {
-    if ($item['numero_hamonia_conjugal'] == $vibra_com) {
-        $texto_vibra_com = $item['texto_hamonia_conjugal'];
-        break;
+if (is_array($hamonia_conjugal_options)) {
+    foreach ($hamonia_conjugal_options as $item) {
+        if (isset($item['numero_hamonia_conjugal']) && $item['numero_hamonia_conjugal'] == $vibra_com) {
+            $texto_vibra_com = $item['texto_hamonia_conjugal'] ?? [];
+            break;
+        }
     }
 }
 $resposta_subconsciente = $numerologia->calcularRespostaSubconsciente($nome_completo);
@@ -101,6 +133,11 @@ $arcanos = $numerologia->calcularArcanos($nome_completo, $data_nascimento);
 $arcanos = $arcanos['arcanos'];
 $arcanoAtual = $numerologia->getArcanoAtual($arcanos);
 $arcano_vida = $numerologia->calcularArcanoVida($nome_completo, $data_nascimento);
+// echo '<pre>';
+// var_dump($sequencias_vida);
+// echo '</pre>';
+// die();
+
 $arcanos_pessoais = $numerologia->calcularArcanoPessoal($nome_completo, $data_nascimento);
 
 $arcanos_sociais = $numerologia->calcularArcanoSocial($nome_completo, $data_nascimento);
@@ -202,97 +239,99 @@ $vocacional = $numerologia->calcularTesteVocacional($numero_destino, $numero_mis
 $anjo = $numerologia->buscaAnjo($data_nascimento);
 
 // Retorna o conteúdo da array de MOTIVACAO do usuário
-$motivacao_options = get_field('motivacao', 'option');
+$motivacao_options = safe_get_field('motivacao', 'option');
 $motivacao_content = getUserCalculusResultContent($motivacao_options, $numero_motivacao, "", 'numero_motivacao', 'texto_motivacao');
 $motivacao_orientacao = getUserCalculusResultContent($motivacao_options, $numero_motivacao, "", 'numero_motivacao', 'orientacao');
 // Retorna o conteúdo da array de IMPRESSAO do usuário
-$impressao_options = get_field('impressao', 'option');
+$impressao_options = safe_get_field('impressao', 'option');
 $impressao_content = getUserCalculusResultContent($impressao_options, $numero_impressao, "", 'numero_impressao', 'texto_impressao');
 $impressao_orientacao = getUserCalculusResultContent($impressao_options, $numero_impressao, "", 'numero_impressao', 'orientacao');
 
 // Retorna o conteúdo da array de EXPRESSAO do usuário
-$expressao_options = get_field('expressao', 'option');
+$expressao_options = safe_get_field('expressao', 'option');
 $expressao_content = getUserCalculusResultContent($expressao_options, $numero_expressao, "", 'numero_expressao', 'texto_expressao');
 $expressao_orientacao = getUserCalculusResultContent($expressao_options, $numero_expressao, "", 'numero_expressao', 'orientacao');
 // Retorna o conteúdo da array de ARCANOS do usuário
-$arcano_basicavida_options = get_field('arcano_basicavida', 'option');
+$arcano_basicavida_options = safe_get_field('arcano_basicavida', 'option');
 $arcano_basicavida_content = getUserArcanosCalculusResultContent($arcano_basicavida_options, $arcanos, "");
 
 // Retorna o conteúdo da array de MISSAO do usuário
-$missao_options = get_field('missao', 'option');
+$missao_options = safe_get_field('missao', 'option');
 $missao_content = getUserCalculusResultContent($missao_options, $numero_missao, "", 'numero_missao', 'texto_missao');
 
 // Retorna o conteúdo da array de DESTINO do usuário
-$destino_options = get_field('destino', 'option');
+$destino_options = safe_get_field('destino', 'option');
 $destino_content = getUserCalculusResultContent($destino_options, $numero_destino, "", 'numero_destino', 'texto_destino');
 $destino_orientacao = getUserCalculusResultContent($destino_options, $numero_destino, "", 'numero_destino', 'orientacao');
 // Retorna o conteúdo da array de ANO PESSOAL do usuário
-$ano_pessoal_options = get_field('ano_pessoal', 'option');
+$ano_pessoal_options = safe_get_field('ano_pessoal', 'option');
 $ano_pessoal_content = getUserCalculusResultContent($ano_pessoal_options, $ano_pessoal, "", 'numero_ano_pessoal', 'texto_ano_pessoal');
 // Retorna o conteúdo da array de MES PESSOAL do usuário
-$numeros_mes_pessoal_options = get_field('numeros_mes_pessoal', 'option');
+$numeros_mes_pessoal_options = safe_get_field('numeros_mes_pessoal', 'option');
 $mes_pessoal_content = getUserCalculusResultContent($numeros_mes_pessoal_options, $mes_pessoal, "", 'numero_mes_pessoal', 'texto_mes_pessoal');
 // Retorna o conteúdo da array de DIA PESSOAL do usuário
-$numeros_dia_pessoal_options = get_field('numeros_dia_pessoal', 'option');
+$numeros_dia_pessoal_options = safe_get_field('numeros_dia_pessoal', 'option');
 $dia_pessoal_content = getUserCalculusResultContent($numeros_dia_pessoal_options, $dia_pessoal, "", 'numero_dia_pessoal', 'texto_dia_pessoal');
-$arcano_pessoal_options = get_field('arcano_basicavida', 'option');
+$arcano_pessoal_options = safe_get_field('arcano_basicavida', 'option');
 
-$arcano_social_options = get_field('arcano_basicavida', 'option');
-$arcano_destino_options = get_field('arcano_basicavida', 'option');
-$piramide_basicavida_options = get_field('piramide_basicavida', 'option');
+$arcano_social_options = safe_get_field('arcano_basicavida', 'option');
+$arcano_destino_options = safe_get_field('arcano_basicavida', 'option');
+$piramide_basicavida_options = safe_get_field('piramide_basicavida', 'option');
 $texto_piramide_vida = buscarTextoPorNumero($ultimo_array_piramide_vida, $piramide_basicavida_options);
 
-$piramide_social_options = get_field('piramide_basicavida', 'option');
+$piramide_social_options = safe_get_field('piramide_basicavida', 'option');
 $texto_piramide_social = buscarTextoPorNumero($ultimo_array_piramide_social, $piramide_social_options);
-$piramide_pessoal_options = get_field('piramide_basicavida', 'option');
+$piramide_pessoal_options = safe_get_field('piramide_basicavida', 'option');
 $texto_piramide_pessoal = buscarTextoPorNumero($ultimo_array_piramide_pessoal, $piramide_pessoal_options);
 
-$piramide_destino_options = get_field('piramide_basicavida', 'option');
+$piramide_destino_options = safe_get_field('piramide_basicavida', 'option');
 $texto_piramide_destino = buscarTextoPorNumero($ultimo_array_piramide_destino, $piramide_destino_options);
-$sequencias_positivas_options = get_field('sequencias_positivas', 'option');
-$sequencias_negativas_options = get_field('sequencias_negativas', 'option');
+$sequencias_positivas_options = safe_get_field('sequencias_positivas', 'option');
+$sequencias_negativas_options = safe_get_field('sequencias_negativas', 'option');
 
-$dias_favoraveis_options = get_field('dias_favoraveis', 'option');
-$numeros_harmonicos_options = get_field('numeros_harmonicos', 'option');
+$dias_favoraveis_options = safe_get_field('dias_favoraveis', 'option');
+$numeros_harmonicos_options = safe_get_field('numeros_harmonicos', 'option');
 
-$numeros_desafios_options = get_field('numeros_desafios', 'option');
+$numeros_desafios_options = safe_get_field('numeros_desafios', 'option');
 
 $desafio_content = getUserCalculusResultContent($numeros_desafios_options, $desafios, " ", 'numero_do_desafio', 'texto_desafio');
 
-$numeros_psiquicos_options = get_field('numeros_psiquicos', 'option');
+$numeros_psiquicos_options = safe_get_field('numeros_psiquicos', 'option');
 $psiquico_content = getUserCalculusResultContent($numeros_psiquicos_options, $numero_psiquico, " ", 'numero_psiquico', 'texto_numero_psiquico');
-$grau_ascenssao_options = get_field('grau_ascenssao', 'option');
-$resposta_subconsciente_options = get_field('resposta_subconsciente', 'option');
+$grau_ascenssao_options = safe_get_field('grau_ascenssao', 'option');
+$resposta_subconsciente_options = safe_get_field('resposta_subconsciente', 'option');
 $resposta_subconsciente_content = getUserCalculusResultContent($resposta_subconsciente_options, $resposta_subconsciente, " ", 'numero_resposta_subconsciente', 'texto_resposta_subconsciente');
-$momentos_decisivos_options = get_field('momentos_decisivos', 'option');
+$momentos_decisivos_options = safe_get_field('momentos_decisivos', 'option');
 
 $textos_momentos = [];
+if (is_array($momentos_decisivos_options)) {
     foreach ($numeros_momentos as $key => $numero) {
       foreach ($momentos_decisivos_options as $momento) {
-        if ((int) $momento['numero_momento_decisivo'] === $numero) {
+        if (isset($momento['numero_momento_decisivo']) && (int) $momento['numero_momento_decisivo'] === $numero) {
             $textos_momentos[] = $momento;
         }
     }
+}
 }
 
 $momento_decisivo_numero = [];
 foreach ($numeros_momentos as $key => $numero) {
     $momento_decisivo_numero[] = $numero;
 }
-$relacoes_intervalores_options = get_field('relacoes_intervalores', 'option');
+$relacoes_intervalores_options = safe_get_field('relacoes_intervalores', 'option');
 $resultado_relacoes_intervalor = getRelacoesIntervalores($relacoes_intervalores, $relacoes_intervalores_options);
 if (is_array($resultado_relacoes_intervalor) && isset($resultado_relacoes_intervalor[0])) {
     $resultado_relacoes_intervalor = $resultado_relacoes_intervalor[0];
 }
 
 $relacoes_intervalores_content = getUserCalculusResultContent($relacoes_intervalores_options, $relacoes_intervalores, " ", 'numero_relacao_intervalor', 'texto_relacao_intervalor');
-$licoes_carmicas_options = get_field('licoes_carmicas', 'option');
-$dividas_carmicas_options = get_field('dividas_carmicas', 'option');
+$licoes_carmicas_options = safe_get_field('licoes_carmicas', 'option');
+$dividas_carmicas_options = safe_get_field('dividas_carmicas', 'option');
 
 // As opções dos ciclos obtidas
-$primeiro_ciclo_de_vida_options = get_field('primeiro_ciclo_de_vida', 'option');
-$segundo_ciclo_de_vida_options = get_field('segundo_ciclo_de_vida', 'option');
-$terceiro_ciclo_de_vida_options = get_field('terceiro_ciclo_de_vida', 'option');
+$primeiro_ciclo_de_vida_options = safe_get_field('primeiro_ciclo_de_vida', 'option');
+$segundo_ciclo_de_vida_options = safe_get_field('segundo_ciclo_de_vida', 'option');
+$terceiro_ciclo_de_vida_options = safe_get_field('terceiro_ciclo_de_vida', 'option');
 
 // Criar o array com os textos organizados
 $ciclos_textos = [
@@ -324,21 +363,21 @@ function gerarCiclosComTextos($ciclos, $ciclos_textos) {
 $ciclos_textos_filtrados = gerarCiclosComTextos($ciclos, $ciclos_textos);
 
 // Exibe o array gerado para verificação
-$tendencias_ocultas_options = get_field('tendencias_ocultas', 'option');
-$talento_oculto_options = get_field('talento_oculto', 'option');
+$tendencias_ocultas_options = safe_get_field('tendencias_ocultas', 'option');
+$talento_oculto_options = safe_get_field('talento_oculto', 'option');
 $talento_content = getUserCalculusResultContent($talento_oculto_options, $talento_oculto , "", 'numero_talento_oculto', 'texto_talento_oculto');
-$cores_options = get_field('cores', 'option');
-$anjo_options = get_field('anjo', 'option');
+$cores_options = safe_get_field('cores', 'option');
+$anjo_options = safe_get_field('anjo', 'option');
 
-$anjo = $anjo[0];
-$dia_natalicio_options = get_field('dia_natalicio', 'option');
+$anjo = is_array($anjo) && isset($anjo[0]) ? $anjo[0] : [];
+$dia_natalicio_options = safe_get_field('dia_natalicio', 'option');
 $dia_natalicio = getDiaNatalicio($data_nascimento, $dia_natalicio_options);
 
-$descricao_itens_docx_options = get_field('descricao_itens_docx', 'option');
-$letra_inicio_nome_option = get_field('letra_inicial_nome', 'option');
+$descricao_itens_docx_options = safe_get_field('descricao_itens_docx', 'option');
+$letra_inicio_nome_option = safe_get_field('letra_inicial_nome', 'option');
 $letra_inicio_nome = getLetraNome($nome_completo, $letra_inicio_nome_option);
-$letra_inicio_nome = $letra_inicio_nome[0];
-$descricao_itens_docx_options = get_field('descricao_docx', 'option');
+$letra_inicio_nome = is_array($letra_inicio_nome) && isset($letra_inicio_nome[0]) ? $letra_inicio_nome[0] : [];
+$descricao_itens_docx_options = safe_get_field('descricao_docx', 'option');
 $numero_anjo = $anjo['numero'];
 
 //tratamento para o frontend

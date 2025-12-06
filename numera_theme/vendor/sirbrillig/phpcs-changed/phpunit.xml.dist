@@ -1,9 +1,0 @@
-<phpunit
-        bootstrap="index.php"
-        >
-        <testsuites>
-                <testsuite name="'all-tests">
-                        <directory>tests</directory>
-                </testsuite>
-        </testsuites>
-</phpunit>

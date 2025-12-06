@@ -4,132 +4,190 @@ use PhpOffice\PhpWord\SimpleType\Jc;
 function gerar_docx_com_infos()
 {
     if (isset($_GET['download_docx'])) {
-        require_once get_template_directory() . '/inc/template-single-mapa-functions.php';
+        // Ativar log de erros para debug (mas silenciar warnings do ACF)
+        error_reporting(E_ALL & ~E_NOTICE & ~E_USER_NOTICE);
+        ini_set('display_errors', 0);
+        ini_set('log_errors', 1);
 
-        $phpWord = start_php_word_docx();
-        $section = $phpWord->addSection();
-        add_basic_info_section($section, $nome_completo, $data_nascimento); // Adiciona informações básicas
-       // Resultados de cálculos Motivação, Impressão, Expressão
-        add_calculations_section($section, $numero_motivacao, $numero_impressao, $numero_expressao, $numero_psiquico, $talento_oculto, $numero_destino, $numero_missao, $resposta_subconsciente, $relacoes_intervalores);
-        // Dia natalício
-        add_dia_nascimento_section($section, $dia_natalicio);
-        // Resultado do Calculo Lições Carmicas, Dívidas Cármicas, tendencias ocultas
-        add_karmic_number($section, $licoes_carmicas, $dividas_carmicas, $tendencias_ocultas);
-        // Momentos Decisivos
-        add_momentos_decisivos($section, $momento_decisivo_numero);
-        // Ciclos da Vida
-        add_life_cycles_section($section, $ciclos);
-        // Desafios
-        add_challenges_section($section, $desafios);
-        // Hamonia conjugal
-        add_marital_harmony($section, $harmonia);
-        // Texto ano, mes e ano
-        add_personal_dado_section($section, $ano_pessoal, $mes_pessoal, $dia_pessoal);
-        // Texto grau_ascensão
-        add_personal_section_grau($section, $grau_ascensao);
-        // Anjo
-        add_ange_num_section($section, $anjo);
-        // Arcano Atual
-        add_arcano_section($section, $arcanoAtual, $arcano_basicavida_options);
-        // QUEM VOCÊ É?
-        add_conteudo_quem_section($section);
-        // texto motivacao, impressao, expressão, psiquico, desafio, resposta subconciente, relacao intervalor, missao, talento oculto
-        add_calculations_text_quem_section($section, $numero_motivacao, $motivacao_content ,$numero_impressao, $numero_expressao, $impressao_content, $expressao_content, $numero_psiquico, $psiquico_content, $talento_oculto,$talento_content);
-        // Dia natalício
-        add_dia_natalicio_section($section, $dia_natalicio);
-        // Letra inicial do Nome
-        add_inicial_name_section($section, $letra_inicio_nome);
-        // PARA ONDE VOCÊ QUER IR?
-        add_conteudo_onde_ir_section($section);
-        add_text_destino_missao_section($section, $numero_destino, $destino_content, $numero_missao, $missao_content);
-        // Vocacional
-        add_vocational_section($section, $vocacional);
-        // Texto Ciclo de Vida
-        add_life_cycles_content_section ($section);
-        add_life_cycles_text_section($section, $ciclos_textos_filtrados);
-        // Momentos Decisivos
-        add_moment_section($section, $textos_momentos, $momentos_decisivos);
-        // Ano, Mes e Dia pessoal
-        add_personal_section($section, $ano_pessoal_content, $mes_pessoal_content, $dia_pessoal_content);
-        // anjo dado
-        add_angel_section($section, $anjo, $anjo_options);
+        // Suprimir warnings específicos do ACF sobre tradução
+        add_filter('doing_it_wrong_trigger_error', function ($trigger, $function) {
+            if ($function === '_load_textdomain_just_in_time' && strpos(debug_backtrace()[3]['file'] ?? '', 'acf') !== false) {
+                return false;
+            }
+            return $trigger;
+        }, 10, 2);
 
-        // LIÇÕES E APRENDIZADOS (texto lições carmicas, dividas carmicas, tendencias ocultas, resposta subconciente, desafios)
-        add_karmic_lessons_debts_section($section, $licoes_carmicas, $licao_carmica, $dividas_carmicas, $divida_carmica);
-        // Tendências Ocultas
-        add_hidden_tendencies_section($section, $tendencias_ocultas, $resultado_tendencias);
-        // Resposta subconciente
-        add_resposta_sub_section($section, $resposta_subconsciente,$resposta_subconsciente_content);
-        //desafios
-        add_challenges_text_section($section, $resultado_desafios);
-        // QUALIDADE DE VIDA TEXTO
-        add_qualidade_vida_section ($section);
-        //Dados Cores, das favoraveis, numeros hamonicos
-        add_energies_life_cycles_section ($section, $cores, $dias_favoraveis, $resultado_numeros_harmonicos);
-        // Harmonia Conjugal
-        add_marital_harmony_section($section, $harmonia, $vibra_com, $atrai, $e_oposto, $e_passivo_em_relacao_a, $texto_hamononia_conjugal, $texto_vibra_com);
+        // Garantir que estamos no contexto correto do post
+        if (isset($_GET['post_id'])) {
+            $post_id = intval($_GET['post_id']);
+            global $post;
+            $post = get_post($post_id);
 
-        // Análise de Assinatura
-        add_signature_analysis_section($section, $letras_nome, $vogais, $consoantes); // Análise de Assinatura
-        //ANÁLISE DO NOME: Triangulo de Vida e Sequências Negativas
-        add_content_pyramid_section ($section);
-        // Pirâmide vida
-        add_pyramid_sequence_section($section, 'Vida', $nome_completo, $piramide_vida, $sequencias_vida);
-        // sequencia negativas vida
-        add_sequence_section($section, $sequencias_negativas_options, $sequencias_vida, $texto_piramide_vida);
-        // sequencias positivas da vida
-        add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_vida, $texto_piramide_vida);
-        // titulo parte arcanos, inserir texto descritivo
-        add_arcano_significado_section ($section);
-        // Arcanos vida
-        add_arcanos_section($section, 'Arcanos da Vida', $arcano_vida, $arcano_basicavida_options);
+            if (!$post) {
+                wp_die('Post não encontrado. ID: ' . $post_id);
+            }
 
-        // piramide pessoal
-        add_pyramid_sequence_section($section, 'Pessoal', $nome_completo, $piramide_pessoal, $sequencias_pessoal);
-        // sequencia  negativas pessoal
-        add_sequence_section($section, $sequencias_negativas_options, $sequencias_pessoal, $texto_piramide_pessoal);
-        // sequencias positivas da vida
-        add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_pessoal, $texto_piramide_pessoal);
-        // titulo parte arcanos, inserir texto descritivo
+            setup_postdata($post);
+            error_log('Contexto do post configurado para ID: ' . $post_id . ' | Título: ' . get_the_title());
+        } else {
+            error_log('AVISO: post_id não foi passado na URL do download');
+        }
 
-        // arcano pessoal
-        add_arcanos_section($section, 'Arcanos Pessoais', $arcanos_pessoais, $arcano_basicavida_options); // Trazer textos arcanos
+        try {
+            require_once get_template_directory() . '/inc/template-single-mapa-functions.php';
 
-        // piramide social
-        add_pyramid_sequence_section($section, 'Social', $nome_completo, $piramide_social, $sequencias_social);
-        // sequencia negativas social
-        add_sequence_section($section, $sequencias_negativas_options, $sequencias_social, $texto_piramide_social);
-        // sequencias positivas da Sociais
-        add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_social, $texto_piramide_social);
-        // titulo parte arcanos, inserir texto descritivo
+            // Verificar se as variáveis essenciais foram definidas
+            if (!isset($nome_completo) || !isset($data_nascimento)) {
+                throw new Exception('Dados essenciais não encontrados. Nome: ' . (isset($nome_completo) ? 'OK' : 'FALTA') . ', Data: ' . (isset($data_nascimento) ? 'OK' : 'FALTA'));
+            }
 
-        // arcano social
-        add_arcanos_section($section, 'Arcanos Sociais', $arcanos_sociais, $arcano_basicavida_options);
+            $phpWord = start_php_word_docx();
+            $section = $phpWord->addSection();
+            add_basic_info_section($section, $nome_completo, $data_nascimento); // Adiciona informações básicas
+            // Resultados de cálculos Motivação, Impressão, Expressão
+            add_calculations_section($section, $numero_motivacao, $numero_impressao, $numero_expressao, $numero_psiquico, $talento_oculto, $numero_destino, $numero_missao, $resposta_subconsciente, $relacoes_intervalores);
+            // Dia natalício
+            add_dia_nascimento_section($section, $dia_natalicio);
+            // Resultado do Calculo Lições Carmicas, Dívidas Cármicas, tendencias ocultas
+            add_karmic_number($section, $licoes_carmicas, $dividas_carmicas, $tendencias_ocultas);
+            // Momentos Decisivos
+            add_momentos_decisivos($section, $momento_decisivo_numero);
+            // Ciclos da Vida
+            add_life_cycles_section($section, $ciclos);
+            // Desafios
+            add_challenges_section($section, $desafios);
+            // Hamonia conjugal
+            add_marital_harmony($section, $harmonia);
+            // Texto ano, mes e ano
+            add_personal_dado_section($section, $ano_pessoal, $mes_pessoal, $dia_pessoal);
+            // Texto grau_ascensão
+            add_personal_section_grau($section, $grau_ascensao);
+            // Anjo
+            add_ange_num_section($section, $anjo);
+            // Arcano Atual
+            add_arcano_section($section, $arcanoAtual, $arcano_basicavida_options);
+            // QUEM VOCÊ É?
+            add_conteudo_quem_section($section);
+            // texto motivacao, impressao, expressão, psiquico, desafio, resposta subconciente, relacao intervalor, missao, talento oculto
+            add_calculations_text_quem_section($section, $numero_motivacao, $motivacao_content, $numero_impressao, $numero_expressao, $impressao_content, $expressao_content, $numero_psiquico, $psiquico_content, $talento_oculto, $talento_content);
+            // Dia natalício
+            add_dia_natalicio_section($section, $dia_natalicio);
+            // Letra inicial do Nome
+            add_inicial_name_section($section, $letra_inicio_nome);
+            // PARA ONDE VOCÊ QUER IR?
+            add_conteudo_onde_ir_section($section);
+            add_text_destino_missao_section($section, $numero_destino, $destino_content, $numero_missao, $missao_content);
+            // Vocacional
+            add_vocational_section($section, $vocacional);
+            // Texto Ciclo de Vida
+            add_life_cycles_content_section($section);
+            add_life_cycles_text_section($section, $ciclos_textos_filtrados);
+            // Momentos Decisivos
+            add_moment_section($section, $textos_momentos, $momentos_decisivos);
+            // Ano, Mes e Dia pessoal
+            add_personal_section($section, $ano_pessoal_content, $mes_pessoal_content, $dia_pessoal_content);
+            // anjo dado
+            add_angel_section($section, $anjo, $anjo_options);
 
-        // piramide Destino
-        add_pyramid_sequence_section($section, 'Destino', $nome_completo, $piramide_destino, $sequencias_destino);
-        // Sequencia negativas Destino
-        add_sequence_section($section, $sequencias_negativas_options, $sequencias_destino, $texto_piramide_destino);
-        // sequencias positivas da Sociais
-        add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_destino, $texto_piramide_destino);
-        // titulo parte arcanos, inserir texto descritivo
+            // LIÇÕES E APRENDIZADOS (texto lições carmicas, dividas carmicas, tendencias ocultas, resposta subconciente, desafios)
+            add_karmic_lessons_debts_section($section, $licoes_carmicas, $licao_carmica, $dividas_carmicas, $divida_carmica);
+            // Tendências Ocultas
+            add_hidden_tendencies_section($section, $tendencias_ocultas, $resultado_tendencias);
+            // Resposta subconciente
+            add_resposta_sub_section($section, $resposta_subconsciente, $resposta_subconsciente_content);
+            //desafios
+            add_challenges_text_section($section, $resultado_desafios);
+            // QUALIDADE DE VIDA TEXTO
+            add_qualidade_vida_section($section);
+            //Dados Cores, das favoraveis, numeros hamonicos
+            add_energies_life_cycles_section($section, $cores, $dias_favoraveis, $resultado_numeros_harmonicos);
+            // Harmonia Conjugal
+            add_marital_harmony_section($section, $harmonia, $vibra_com, $atrai, $e_oposto, $e_passivo_em_relacao_a, $texto_hamononia_conjugal, $texto_vibra_com);
 
-        // arcano Destino
-        add_arcanos_section($section, 'Arcanos Destino', $arcanos_destino, $arcano_basicavida_options);
-        // Envia o documento gerado
-        send_php_word_docx($phpWord, 'analise_mapa');
+            // Análise de Assinatura
+            add_signature_analysis_section($section, $letras_nome, $vogais, $consoantes); // Análise de Assinatura
+            //ANÁLISE DO NOME: Triangulo de Vida e Sequências Negativas
+            add_content_pyramid_section($section);
+            // Pirâmide vida
+            add_pyramid_sequence_section($section, 'Vida', $nome_completo, $piramide_vida, $sequencias_vida);
+            // sequencia negativas vida
+            add_sequence_section($section, $sequencias_negativas_options, $sequencias_vida, $texto_piramide_vida);
+            // sequencias positivas da vida
+            add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_vida, $texto_piramide_vida);
+            // titulo parte arcanos, inserir texto descritivo
+            add_arcano_significado_section($section);
+            // Arcanos vida - retorna array '
+            add_arcanos_section($section, 'Arcanos da Vida', $arcanos ?? [], $arcano_basicavida_options);
+            // piramide pessoal
+            add_pyramid_sequence_section($section, 'Pessoal', $nome_completo, $piramide_pessoal, $sequencias_pessoal);
+            // sequencia  negativas pessoal
+            add_sequence_section($section, $sequencias_negativas_options, $sequencias_pessoal, $texto_piramide_pessoal);
+            // sequencias positivas da vida
+            add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_pessoal, $texto_piramide_pessoal);
+            // titulo parte arcanos, inserir texto descritivo
+
+            // Arcano Pessoal - retorna array direto, sem chave 'arcanos'
+            add_arcanos_section($section, 'Arcanos Pessoais', is_array($arcanos_pessoais) ? $arcanos_pessoais : [], $arcano_basicavida_options);
+
+            // piramide social
+            add_pyramid_sequence_section($section, 'Social', $nome_completo, $piramide_social, $sequencias_social);
+            // sequencia negativas social
+            add_sequence_section($section, $sequencias_negativas_options, $sequencias_social, $texto_piramide_social);
+            // sequencias positivas da Sociais
+            add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_social, $texto_piramide_social);
+            // titulo parte arcanos, inserir texto descritivo
+
+            // arcano social - retorna array direto, sem chave 'arcanos'
+            add_arcanos_section($section, 'Arcanos Sociais', is_array($arcanos_sociais) ? $arcanos_sociais : [], $arcano_basicavida_options);
+
+            // piramide Destino
+            add_pyramid_sequence_section($section, 'Destino', $nome_completo, $piramide_destino, $sequencias_destino);
+            // Sequencia negativas Destino
+            add_sequence_section($section, $sequencias_negativas_options, $sequencias_destino, $texto_piramide_destino);
+            // sequencias positivas da Sociais
+            add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_destino, $texto_piramide_destino);
+            // titulo parte arcanos, inserir texto descritivo
+
+            // arcano Destino - retorna array direto, sem chave 'arcanos'
+            add_arcanos_section($section, 'Arcanos Destino', is_array($arcanos_destino) ? $arcanos_destino : [], $arcano_basicavida_options);
+            // Envia o documento gerado
+            send_php_word_docx($phpWord, 'analise_mapa');
+
+            // Resetar contexto do post
+            wp_reset_postdata();
+
+        } catch (Exception $e) {
+            // Resetar contexto do post em caso de erro
+            wp_reset_postdata();
+
+            // Log do erro
+            error_log('ERRO ao gerar mapa DOCX: ' . $e->getMessage());
+            error_log('Trace: ' . $e->getTraceAsString());
+
+            // Mensagem amigável para o usuário
+            wp_die(
+                '<h1>Erro ao gerar o mapa</h1>' .
+                '<p>Ocorreu um erro ao processar seu mapa numerológico. Por favor, tente novamente.</p>' .
+                '<p>Se o erro persistir, entre em contato com o suporte.</p>' .
+                '<p><strong>Detalhes técnicos:</strong> ' . esc_html($e->getMessage()) . '</p>' .
+                '<p><a href="javascript:history.back()">← Voltar</a></p>',
+                'Erro no Download',
+                ['response' => 500]
+            );
+        }
     }
 }
 
 // Funções auxiliares
-function add_basic_info_section($section, $nome_completo, $data_nascimento) {
+function add_basic_info_section($section, $nome_completo, $data_nascimento)
+{
     $titleStyle = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '2C0A5C'];
     $paragraphStyle = ['name' => 'Arial', 'size' => 12, 'color' => '333333'];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
-    $heading2Style = ['name' => 'Arial', 'size' => 22, 'bold' => true, 'color'=> '000000'];
+    $heading2Style = ['name' => 'Arial', 'size' => 22, 'bold' => true, 'color' => '000000'];
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
 
-    $section->addText("Bem vindo (a) ao seu Mapa Numerológico Completo",$heading2Style,$heading2StyleJustify );
+    $section->addText("Bem vindo (a) ao seu Mapa Numerológico Completo", $heading2Style, $heading2StyleJustify);
     $section->addTextBreak(2);
     // Convertendo a data para o formato dd/mm/yyyy dentro da função
     if ($data_nascimento && $data_nascimento !== "0000-00-00") {
@@ -140,21 +198,21 @@ function add_basic_info_section($section, $nome_completo, $data_nascimento) {
 
     $section->addText($nome_completo, $titleStyle);
     //$section->addTextBreak(1);
-    $section->addText("Nascido(a) em " .  $data_nascimento_formatada, $paragraphStyle, $paragraphStyleJustify);
+    $section->addText("Nascido(a) em " . $data_nascimento_formatada, $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
 }
 
 function add_signature_analysis_section($section, $letras_nome, $vogais, $consoantes)
 {
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
-    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color'=> '000000']; // formatação do titulo
+    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color' => '000000']; // formatação do titulo
     $paragraphStyle3 = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
 
     $section->addPageBreak();
     $section->addText("Análise de Assinatura", $heading2Style, $heading2StyleJustify);
     $section->addTextBreak(1);
-    $section->addText("A Análise de Assinatura na Numerologia Cabalística é uma prática que busca harmonizar a energia pessoal com os objetivos de vida, utilizando o nome escrito de forma consciente para potencializar vibrações positivas. A assinatura representa a identidade energética da pessoa no mundo material e pode influenciar diretamente o sucesso, a comunicação, os relacionamentos e a realização de metas.",$paragraphStyle3, $paragraphStyleJustify);
+    $section->addText("A Análise de Assinatura na Numerologia Cabalística é uma prática que busca harmonizar a energia pessoal com os objetivos de vida, utilizando o nome escrito de forma consciente para potencializar vibrações positivas. A assinatura representa a identidade energética da pessoa no mundo material e pode influenciar diretamente o sucesso, a comunicação, os relacionamentos e a realização de metas.", $paragraphStyle3, $paragraphStyleJustify);
     $section->addTextBreak(1);
 
     $table = $section->addTable();
@@ -177,41 +235,43 @@ function add_signature_analysis_section($section, $letras_nome, $vogais, $consoa
 
     $section->addTextBreak(2);
 }
-function add_conteudo_quem_section ($section){
+function add_conteudo_quem_section($section)
+{
     $heading2StyleJustify = ['alignment' => Jc::CENTER]; // alinhamento titulo
-    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color'=> '000000']; // formatação do titulo
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; // formatação da descrição
+    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color' => '000000']; // formatação do titulo
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     //$paragraphStyleJustify = ['alignment' => Jc::BOTH]; // alinhamento do texto descrição
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240, 'lineHeight' => '1.2em']; // alinhamento dos textos
     //$section->addPageBreak();
-    $section->addText("Quem é você?", $heading2Style , $heading2StyleJustify);
+    $section->addText("Quem é você?", $heading2Style, $heading2StyleJustify);
     $section->addTextBreak(1);
     $section->addText("Os números relacionados a Motivação, Expressão,Impressão, Talento Oculto e Número Psíquico, Dia de Nascimento, descrevem a personalidade com
 seu temperamento, os dons, os talentos e as aptidões pessoais e profissionais. Mostra quem é você.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addTextBreak(1);
 }
-function add_calculations_text_quem_section($section, $numero_motivacao, $motivacao_content ,$numero_impressao, $numero_expressao, $impressao_content, $expressao_content, $numero_psiquico, $psiquico_content, $talento_oculto,$talento_content) {
+function add_calculations_text_quem_section($section, $numero_motivacao, $motivacao_content, $numero_impressao, $numero_expressao, $impressao_content, $expressao_content, $numero_psiquico, $psiquico_content, $talento_oculto, $talento_content)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240, 'lineHeight' => '1.2em']; // alinhamento dos textos
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação do subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados do ACF e dos Funções do Sistema
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados do ACF e dos Funções do Sistema
 
 
     $section->addTextBreak(1);
     $section->addText("Motivação", $paragraphStyle2);
-    $section->addText("Descreve os motivos que estão por trás das decisões que uma pessoa toma e do seu modo de proceder. É o número que corresponde á ação e a maneira que essa ação é desenvolvida.",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("Descreve os motivos que estão por trás das decisões que uma pessoa toma e do seu modo de proceder. É o número que corresponde á ação e a maneira que essa ação é desenvolvida.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de motivação - $numero_motivacao: $motivacao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addTextBreak(1);
     $section->addText("Impressão ou 'Aparência'", $paragraphStyle2);
-    $section->addText("É o número que descreve o que está oculto no ser humano e a imagem que uma pessoa tem de si mesma (geralmente sem perceber). Revela, ainda, a primeira impressão que os outros têm de nós, antes de nos conhecerem na realidade, ou seja, a condenação ou a absolvição antes do julgamento. ",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("É o número que descreve o que está oculto no ser humano e a imagem que uma pessoa tem de si mesma (geralmente sem perceber). Revela, ainda, a primeira impressão que os outros têm de nós, antes de nos conhecerem na realidade, ou seja, a condenação ou a absolvição antes do julgamento. ", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Impressão - $numero_impressao: $impressao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addTextBreak(1);
     $section->addText("Expressão", $paragraphStyle2);
-    $section->addText("Descreve a maneira como um ser humano interage com outro. Ele diz quais são seus verdadeiros talentos e qual a melhor forma de expressá-los. ",$paragraphStyle, $paragraphStyleWithSpacing);
+    $section->addText("Descreve a maneira como um ser humano interage com outro. Ele diz quais são seus verdadeiros talentos e qual a melhor forma de expressá-los. ", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número de expressão - $numero_expressao: $expressao_content", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addTextBreak(1);
     $section->addText("Número psíquico", $paragraphStyle2);
-    $section->addText("É o número que mostra as qualidades psíquicas que influenciam as pessoas nascidas em determinados dias em comum, mostrando certos padrões interiores comuns entre elas.  Esse número revela as qualidades que influenciam nas escolhas pessoais, como amizades, sexo, casamentos, relacionamentos, profissões, desejos, ambições e até alimentos.  Mostra como nos vemos em nosso interior e como nós lidamos com as forças interiores de nossa personalidade.", $paragraphStyle,$paragraphStyleWithSpacing);
+    $section->addText("É o número que mostra as qualidades psíquicas que influenciam as pessoas nascidas em determinados dias em comum, mostrando certos padrões interiores comuns entre elas.  Esse número revela as qualidades que influenciam nas escolhas pessoais, como amizades, sexo, casamentos, relacionamentos, profissões, desejos, ambições e até alimentos.  Mostra como nos vemos em nosso interior e como nós lidamos com as forças interiores de nossa personalidade.", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Número psíquico - $numero_psiquico: $psiquico_content ", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addTextBreak(1);
     $section->addText("Talento Oculto", $paragraphStyle2);
@@ -224,24 +284,25 @@ function add_calculations_text_quem_section($section, $numero_motivacao, $motiva
 function add_conteudo_onde_ir_section($section)
 {
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; // formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
-    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color'=> '000000'];
+    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color' => '000000'];
     //$paragraphStyleJustify = ['alignment' => Jc::BOTH];
 
-    $section->addText("Para Onde Você quer ir?",$heading2Style, $heading2StyleJustify);
+    $section->addText("Para Onde Você quer ir?", $heading2Style, $heading2StyleJustify);
     $section->addTextBreak(1);
     $section->addText("Os números relacionados a Destino, Missão, Potencialidades Vocacionais, Ciclo de Vida, Momento Decisivo, Ano Pessoal, Mês Pessoal e Dia Pessoal, revelam a sua destinação na vida, com as influências, suas circunstâncias e as suas oportunidades. Mostra qual seu propósito de vida e o que você está destinado a construir.", $paragraphStyle, $paragraphStyleWithSpacing);
 }
-function add_text_destino_missao_section($section, $numero_destino, $destino_content, $numero_missao, $missao_content) {
+function add_text_destino_missao_section($section, $numero_destino, $destino_content, $numero_missao, $missao_content)
+{
 
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=>  true]; // formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação do subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
     $section->addText("Destino", $paragraphStyle2);
-    $section->addText("Este é um dos números mais importantes do Mapa Numerológico. Ele descreve as influências na personalidade, oportunidades e os obstáculos que uma pessoa irá encontrar ao longo da sua vida. Indica, ainda, as alternativas disponíveis e o provável resultado de cada uma delas. ", $paragraphStyle,$paragraphStyleWithSpacing);
+    $section->addText("Este é um dos números mais importantes do Mapa Numerológico. Ele descreve as influências na personalidade, oportunidades e os obstáculos que uma pessoa irá encontrar ao longo da sua vida. Indica, ainda, as alternativas disponíveis e o provável resultado de cada uma delas. ", $paragraphStyle, $paragraphStyleWithSpacing);
     $section->addText("Destino - $numero_destino: $destino_content ", $paragraphStyle3, $paragraphStyleWithSpacing);
     $section->addText("Missão", $paragraphStyle2);
     $section->addText("A Numerologia Cabalística dá grande importância a este número, sendo considerado mesmo de alta 'importância', pois reflete, na essência, o que a pessoa veio fazer neste planeta, nesta existência. É fundamental e muito importante esclarecer que toda e qualquer pessoa tem 'livre-arbítrio' e pode fazer o que bem entender com a sua vida. Porém, também é importante saber que os números obedecem a uma ordem rigorosa de harmonia, compatibilidade, neutralidade e incompatibilidade que, se não respeitada, pode causar ao seu portador inúmeros aborrecimentos ou mesmo derrocadas na vida. ", $paragraphStyle, $paragraphStyleWithSpacing);
@@ -254,7 +315,7 @@ function add_vocational_section($section, $vocacional)
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
     $section->addText("Aptidões e Potencialidades Vocacional", $paragraphStyle2);
     $section->addText("Revelam quais são as atividades profissionais mais favoráveis a você de acordo com os seus talentos e seus dons.", $paragraphStyle, $paragraphStyleWithSpacing);
@@ -283,7 +344,7 @@ function add_moment_section($section, $textos_momentos, $momentos_decisivos)
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //formatação da descrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
     $paragraphStyle4 = ['name' => 'Arial', 'size' => 10, 'color' => 'D2122E', 'italic' => true]; //formatação da descrição
     //$paragraphStyleJustify = ['alignment' => Jc::BOTH];
@@ -292,7 +353,7 @@ function add_moment_section($section, $textos_momentos, $momentos_decisivos)
 
     $section->addText("Momentos Decisivos", $paragraphStyle2);
     $section->addText("Revelam eventos que podem acontecer em eterminados períodos da sua vida, indicando quais serão as melhores atitudes a serem tomadas em cada uma dessas situações. Porém, lembre-se de que o que for dito sobre um certo momento irá servir apenas para o período em questão.", $paragraphStyle, $paragraphStyleWithSpacing);
-    $section->addText("ATENÇÃO: Verifique se tem alguma relação dos números abaixo com o seu Momento Decisivo. Motivação: 1 - Expressão: 11 - Destino: 11 - Lições Cármicas: 9",$paragraphStyle4, $paragraphStyleWithSpacing );
+    $section->addText("ATENÇÃO: Verifique se tem alguma relação dos números abaixo com o seu Momento Decisivo. Motivação: 1 - Expressão: 11 - Destino: 11 - Lições Cármicas: 9", $paragraphStyle4, $paragraphStyleWithSpacing);
     $section->addTextBreak(2);
     // Itera sobre os momentos decisivos e adiciona o número e texto correspondentes
     $count = 0;
@@ -300,29 +361,29 @@ function add_moment_section($section, $textos_momentos, $momentos_decisivos)
         $numero = $momento['numero_momento_decisivo'];
         $texto = $momento['texto_momento_decisivo'];
         $count++;
-        if($count == 1){
+        if ($count == 1) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("O Primeiro Momento Decisivo retrata o início da nossa vida, onde nos encontramos mais vulneráveis às influências alheias.",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("O Primeiro Momento Decisivo retrata o início da nossa vida, onde nos encontramos mais vulneráveis às influências alheias.", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }elseif ($count == 2) {
+        } elseif ($count == 2) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("O Segundo Momento Decisivo retrata uma etapa onde a maior parte do seu tempo é ocupada pelas responsabilidades familiares e profissionais. Quando um Momento Decisivo e uma Lição Cármica possuem o mesmo número, o período em questão pode decorrer de forma conturbada até que você aprenda essa Lição Cármica..",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("O Segundo Momento Decisivo retrata uma etapa onde a maior parte do seu tempo é ocupada pelas responsabilidades familiares e profissionais. Quando um Momento Decisivo e uma Lição Cármica possuem o mesmo número, o período em questão pode decorrer de forma conturbada até que você aprenda essa Lição Cármica..", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }elseif($count == 3) {
+        } elseif ($count == 3) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("O Terceiro Momento Decisivo retrata uma etapa onde, na maior parte das vezes, você alcançará uma posição com maior estabilidade.",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("O Terceiro Momento Decisivo retrata uma etapa onde, na maior parte das vezes, você alcançará uma posição com maior estabilidade.", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }elseif($count == 4) {
+        } elseif ($count == 4) {
             $section->addText(" $count º Momento Decisivo: $numero", $paragraphStyleNumber);
-            $section->addText("O Quarto Momento Decisivo carrega com ele as recompensas que você merece, como a serenidade, a sabedoria e a consciência universal.",$paragraphStyle, $paragraphStyleWithSpacing );
+            $section->addText("O Quarto Momento Decisivo carrega com ele as recompensas que você merece, como a serenidade, a sabedoria e a consciência universal.", $paragraphStyle, $paragraphStyleWithSpacing);
             $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
-        }else{
+        } else {
             echo "Erro";
         }
     }
     $section->addTextBreak(1);
 
-//    // Adiciona os períodos de cada momento decisivo
+    //    // Adiciona os períodos de cada momento decisivo
 //    for ($i = 1; $i <= 4; $i++) {
 //        $momentoKey = "momentoInicial" . $i;
 //        $momentoFinalKey = "momentoFinal" . $i;
@@ -340,12 +401,12 @@ function add_moment_section($section, $textos_momentos, $momentos_decisivos)
 //        }
 //    }
 }
-function add_resposta_sub_section($section, $resposta_subconsciente,$resposta_subconsciente_content)
+function add_resposta_sub_section($section, $resposta_subconsciente, $resposta_subconsciente_content)
 {
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da desscrição
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; //formatação do subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
 
     $section->addText("Resposta Subconsciente", $paragraphStyle2);
@@ -398,7 +459,8 @@ function add_calculations_section(
 }
 
 
-function add_arcano_significado_section ($section){
+function add_arcano_significado_section($section)
+{
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da desscrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
@@ -409,12 +471,13 @@ function add_arcano_significado_section ($section){
     $section->addText("Os Arcanos são vibrações que nós carregamos ao longo da vida e não podem ser
 anulados, porém, a Numerologia Cabalística ensina que ao deixarmos de assinar o
 nosso nome de batismo completo, nós passamos a atrair essas vibrações com menor
-intensidade.O seu nome de batismo carrega os seguintes Arcanos", $paragraphStyle, $paragraphStyleJustify );
+intensidade.O seu nome de batismo carrega os seguintes Arcanos", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
 }
-function add_arcano_section($section, $arcanos, $arcano_options) {
+function add_arcano_section($section, $arcanos, $arcano_options)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
 
     $dados = '';
@@ -426,12 +489,42 @@ function add_arcano_section($section, $arcanos, $arcano_options) {
     }
     if (!empty($dados)) {
         $section->addText("Arcano Atual:" . $dados['numero_arcano_basicavida'], $paragraphStyle3, $paragraphStyleWithSpacing);
-        $section->addImage($dados['imagem_arcano'], ['width' => 150, 'height' => 225]);
+
+        // Validar e adicionar imagem apenas se existir e for válida
+        if (!empty($dados['imagem_arcano'])) {
+            $image_path = $dados['imagem_arcano'];
+
+            // Se for um array ACF, extrair URL
+            if (is_array($image_path)) {
+                $image_path = $image_path['url'] ?? $image_path['path'] ?? '';
+            }
+
+            // Validar se o arquivo existe
+            if (!empty($image_path)) {
+                // Se for URL, tentar converter para caminho do servidor
+                if (filter_var($image_path, FILTER_VALIDATE_URL)) {
+                    $upload_dir = wp_upload_dir();
+                    $image_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $image_path);
+                }
+
+                // Adicionar imagem apenas se o arquivo existir
+                if (file_exists($image_path) && is_readable($image_path)) {
+                    try {
+                        $section->addImage($image_path, ['width' => 150, 'height' => 225]);
+                    } catch (Exception $e) {
+                        error_log('Erro ao adicionar imagem do arcano: ' . $e->getMessage());
+                        $section->addText('[Imagem do arcano não disponível]', $paragraphStyle);
+                    }
+                }
+            }
+        }
+
         $section->addTextBreak(1);
     }
     $section->addTextBreak(1);
 }
-function add_arcanos_section($section, $titulo, $arcanos, $arcano_options) {
+function add_arcanos_section($section, $titulo, $arcanos, $arcano_options)
+{
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
@@ -440,29 +533,53 @@ function add_arcanos_section($section, $titulo, $arcanos, $arcano_options) {
     $section->addText("$titulo ", 'Heading2Style');
     $section->addTextBreak(1);
 
-    // Debug $arcanos
-    error_log('add_arcanos_section $arcanos: ' . print_r($arcanos, true));
+    // Validar se arcanos é um array válido
+    if (!is_array($arcanos)) {
+        $section->addText("Nenhum arcano disponível para este período.", $paragraphStyle);
+        $section->addTextBreak(1);
+        return;
+    }
 
+    // Contar arcanos válidos antes de processar
+    $arcanos_validos = 0;
     foreach ($arcanos as $arcano) {
-        // Ensure $arcano is an array
+        if (is_array($arcano) && !empty($arcano['arcano'])) {
+            $arcanos_validos++;
+        }
+    }
+
+    // Se não houver arcanos válidos, mostrar mensagem
+    if ($arcanos_validos == 0) {
+        $section->addText("Nenhum arcano disponível para este período.", $paragraphStyle);
+        $section->addTextBreak(1);
+        return;
+    }
+
+    // Processar cada arcano
+    foreach ($arcanos as $arcano) {
+        // Garantir que é um array válido
         if (!is_array($arcano)) {
-            error_log('Invalid $arcano: ' . print_r($arcano, true));
-            $section->addText("Erro: Dados de arcano inválidos.", $paragraphStyle3);
-            continue; // Skip to next iteration
+            continue;
         }
 
-        // Safely access keys with fallbacks
-        $arcano_name = $arcano['arcano'] ?? 'N/A';
+        // Acessar dados de forma segura
+        $arcano_name = $arcano['arcano'] ?? null;
         $inicio = $arcano['inicio'] ?? '';
         $fim = $arcano['fim'] ?? '';
 
-        // Convert dates, handling potential null values
+        // Pular se não houver número de arcano
+        if (empty($arcano_name)) {
+            continue;
+        }
+
+        // Converter datas
         $inicio_formatted = convertDate($inicio) ?: 'Data não disponível';
         $fim_formatted = convertDate($fim) ?: 'Data não disponível';
 
         $section->addText("Arcano: $arcano_name (De $inicio_formatted até $fim_formatted)", $paragraphStyle2);
 
-        $dados = '';
+        // Buscar informações do arcano no banco de dados (ACF)
+        $dados = null;
         foreach ($arcano_options as $option) {
             if (isset($option['numero_arcano_basicavida']) && $option['numero_arcano_basicavida'] == $arcano_name) {
                 $dados = $option;
@@ -470,13 +587,15 @@ function add_arcanos_section($section, $titulo, $arcanos, $arcano_options) {
             }
         }
 
-        if (!empty($dados)) {
-            $section->addText($dados['texto_arcano_basicavida'] ?? 'Texto não disponível', $paragraphStyle3, $paragraphStyleJustify);
+        if (!empty($dados) && !empty($dados['texto_arcano_basicavida'])) {
+            $section->addText($dados['texto_arcano_basicavida'], $paragraphStyle3, $paragraphStyleJustify);
             $section->addTextBreak(1);
         } else {
-            $section->addText("Arcano não encontrado.", $paragraphStyle3);
+            $section->addText("Informações do arcano $arcano_name não encontradas no banco de dados.", $paragraphStyle3);
+            $section->addTextBreak(1);
         }
     }
+
     $section->addTextBreak(1);
 }
 
@@ -487,7 +606,8 @@ function add_arcanos_section($section, $titulo, $arcanos, $arcano_options) {
 //    }
 //}
 
-function add_vocational_table_section($section) {
+function add_vocational_table_section($section)
+{
     $headers = ["Nº de destino", "Nº de Expressão Favorável", "Nº de Expressão Desfavorável", "Números Neutros"];
     $values = [
         ["1", "3, 5 e 9", "6", "1, 2, 4, 7 e 8"],
@@ -515,12 +635,13 @@ function add_vocational_table_section($section) {
     }
 }
 
-function add_qualidade_vida_section ($section){
+function add_qualidade_vida_section($section)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; //formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //formatação da descrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
-    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color'=> '000000'];
+    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color' => '000000'];
 
 
 
@@ -530,28 +651,29 @@ function add_qualidade_vida_section ($section){
     $section->addText("Os números relacionados a Dias do Mês Favoráveis, Números Harmônicos, Relacionamentos/Harmonia Conjugal, e Cores que melhor se harmonizam com seu Dia de Nascimento. Mostra o apoio para a compreensão e as transformações necessárias, para o seu crescimento e prosperidade pessoal.", $paragraphStyle, $paragraphStyleWithSpacing, $paragraphStyleJustify);
     $section->addTextBreak(1);
 }
-function add_energies_life_cycles_section($section, $cores, $dias_favoraveis, $numeros_harmonicos) {
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; // formatação da descrição
+function add_energies_life_cycles_section($section, $cores, $dias_favoraveis, $numeros_harmonicos)
+{
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
 
     // dias favoraveis
-    $section->addText("Dias Favoráveis " ,$paragraphStyle2);
+    $section->addText("Dias Favoráveis ", $paragraphStyle2);
     $section->addTextBreak(1);
-    $section->addText("São considerados os seus “dias da sorte”, sendo favoráveis para realizar coisas importantes. Porém, é importante checar se o mês e o ano pessoal também se encontram favoráveis à determinadas situações.",$paragraphStyle, $paragraphStyleJustify );
+    $section->addText("São considerados os seus “dias da sorte”, sendo favoráveis para realizar coisas importantes. Porém, é importante checar se o mês e o ano pessoal também se encontram favoráveis à determinadas situações.", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
 
     if (is_array($dias_favoraveis)) {
-         $section->addText(join(", ", $dias_favoraveis), $paragraphStyle3);
+        $section->addText(join(", ", $dias_favoraveis), $paragraphStyle3);
     } else {
         $section->addText($dias_favoraveis, $paragraphStyle3);
     }
     // numeros harmonicos
     $section->addTextBreak(1);
-    $section->addText("Números Harmônicos "  ,$paragraphStyle2);
-    $section->addText("Revelam quais são os números que você possui harmonia, sendo bastante uteis para verificar contas bancárias, sociedades, números de telefone, etc. .",$paragraphStyle, $paragraphStyleJustify );
+    $section->addText("Números Harmônicos ", $paragraphStyle2);
+    $section->addText("Revelam quais são os números que você possui harmonia, sendo bastante uteis para verificar contas bancárias, sociedades, números de telefone, etc. .", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
     // Verifica se $numeros_harmonicos é um array
     if (is_array($numeros_harmonicos)) {
@@ -570,13 +692,13 @@ function add_energies_life_cycles_section($section, $cores, $dias_favoraveis, $n
     }
     $section->addTextBreak(1);
     //cores favoraveis
-    $section->addText("Cores Favoráveis"  ,$paragraphStyle2);
-    $section->addText("São consideradas as suas “cores da sorte”, as quais, ao ser utilizadas durante os seus dias favoráveis, irão intensificar o seu poder de atração positiva.",$paragraphStyle, $paragraphStyleJustify );
+    $section->addText("Cores Favoráveis", $paragraphStyle2);
+    $section->addText("São consideradas as suas “cores da sorte”, as quais, ao ser utilizadas durante os seus dias favoráveis, irão intensificar o seu poder de atração positiva.", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
     if (is_array($cores)) {
-        $section->addText( implode(', ', $cores), $paragraphStyle3);
+        $section->addText(implode(', ', $cores), $paragraphStyle3);
     } else {
-        $section->addText( $cores, $paragraphStyle3);
+        $section->addText($cores, $paragraphStyle3);
     }
     $section->addTextBreak(1);
 
@@ -586,7 +708,7 @@ function add_marital_harmony_section($section, $harmonia, $vibra_com, $atrai, $e
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; // formatação da descrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
     $paragraphStyle4 = ['name' => 'Arial', 'size' => 10, 'color' => '054f77', 'italic' => true]; //formatação atenção
 
@@ -595,16 +717,16 @@ function add_marital_harmony_section($section, $harmonia, $vibra_com, $atrai, $e
     $section->addText("Revela como você interage com cada vibração, permitindo que você saiba distinguir paixões passageiras do verdadeiro amor. ", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
     $section->addText("Harmonia Conjugal: $harmonia", $paragraphStyleNumber);
-    $section->addText("Representa a forma como uma pessoa se comporta dentro de um relacionamento amoroso, incluindo sua maneira de amar, suas necessidades afetivas, expectativas emocionais e o tipo de parceria que tende a buscar ou atrair.",$paragraphStyle, $paragraphStyleJustify );
+    $section->addText("Representa a forma como uma pessoa se comporta dentro de um relacionamento amoroso, incluindo sua maneira de amar, suas necessidades afetivas, expectativas emocionais e o tipo de parceria que tende a buscar ou atrair.", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
-    $section->addText($texto_hamononia_conjugal,$paragraphStyle3, $paragraphStyleJustify);
+    $section->addText($texto_hamononia_conjugal, $paragraphStyle3, $paragraphStyleJustify);
     $section->addTextBreak(1);
     $section->addText("O seu Número $harmonia Vibra com $vibra_com", $paragraphStyleNumber);
     $section->addText("Os números que vibram em conjunto emitem uma forte paixão e atração sexual,
 porém podem passar por conflitos frequentes e enfrentar términos em
 decorrência do ciúme exagerado, da arrogância ou da inconstância sexual. Além
 disso, corre-se o risco dessa paixão não ser transformada em amor com o passar
-do tempo.",$paragraphStyle,$paragraphStyleJustify);
+do tempo.", $paragraphStyle, $paragraphStyleJustify);
     // adicionar texto de vibração matrimonial de ACF
     $section->addTextBreak(1);
     $section->addText($texto_vibra_com, $paragraphStyle3, $paragraphStyleJustify);
@@ -624,13 +746,14 @@ function add_marital_harmony($section, $harmonia)
     $section->addText("Harmonia Conjugal: $harmonia", $paragraphStyleNumber);
 }
 
-function add_content_pyramid_section ($section){
+function add_content_pyramid_section($section)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; //formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //formatação da descrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
-    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color'=> '000000'];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '333333', 'italic'=> false]; //formatação da descrição
+    $heading2Style = ['name' => 'Arial', 'size' => 16, 'bold' => true, 'color' => '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '333333', 'italic' => false]; //formatação da descrição
 
     $section->addTextBreak(1);
     $section->addText("Análise do Nome", $heading2Style, $heading2StyleJustify);
@@ -702,9 +825,9 @@ function add_pyramid_sequence_section($section, $titulo, $nome_completo, $pirami
 function add_sequence_section($section, $sequencias_negativas_options, $sequencias_vida, $texto_piramide_vida)
 {
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; //formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //formatação da descrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
 
     $section->addText("Sequências Negativas", $paragraphStyle2);
     $section->addText("As Sequências Negativas atraem negatividades e por isso devem ser evitadas, sendo elas: (Adversidades que impedem a realização profissional, afetiva, pessoal e etc.) ou (Doenças físicas). Ao possuir uma Sequência Negativa, a pessoa pode atrair essas negatividades de forma parcial ou total.", $paragraphStyle, $paragraphStyleJustify);
@@ -724,9 +847,9 @@ function add_sequence_section($section, $sequencias_negativas_options, $sequenci
 function add_sequence_positive_section($section, $sequencias_positivas_options, $sequencias_vida, $texto_piramide_vida)
 {
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; //formatação da descrição
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //formatação da descrição
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
 
     $section->addText("Sequências Positivas", $paragraphStyle2);
@@ -781,7 +904,8 @@ function add_sequence_positive_section($section, $sequencias_positivas_options, 
 //}
 
 //função add texto ciclos de vida em Download
-function add_life_cycles_content_section($section) {
+function add_life_cycles_content_section($section)
+{
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
@@ -795,7 +919,7 @@ function add_life_cycles_text_section($section, $ciclos)
 {
     $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
 
     if (!empty($ciclos) && is_array($ciclos)) {
         $dataNascimento = null;
@@ -861,8 +985,7 @@ function add_life_cycles_text_section($section, $ciclos)
                     $section->addTextBreak(1);
                     $section->addText($texto, $paragraphStyle3, $paragraphStyleWithSpacing);
                 }
-            }
-            else {
+            } else {
                 // Se não bater nenhum formato
                 $section->addText("{$titulo} - Número {$numero}", 'Heading3Style');
                 $section->addText("Período: {$periodo}", $paragraphStyle);
@@ -929,8 +1052,9 @@ function add_life_cycles_text_section($section, $ciclos)
 //    }
 //}a
 
-function add_life_cycles_section($section, $ciclos) {
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+function add_life_cycles_section($section, $ciclos)
+{
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
     if (!empty($ciclos)) {
         $ciclos_text = []; // Array para armazenar os números dos ciclos
@@ -949,10 +1073,10 @@ function add_life_cycles_section($section, $ciclos) {
 function add_dia_natalicio_section($section, $dia_natalicio)
 {
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true];
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
 
 
 
@@ -961,7 +1085,7 @@ function add_dia_natalicio_section($section, $dia_natalicio)
 destacando as suas necessidades evolutivas.", $paragraphStyle, $paragraphStyleWithSpacing, $paragraphStyleJustify);
     if (!empty($dia_natalicio)) {
         foreach ($dia_natalicio as $dados_dia) {
-            $section->addText( $dados_dia, $paragraphStyle3, $paragraphStyleJustify);
+            $section->addText($dados_dia, $paragraphStyle3, $paragraphStyleJustify);
         }
     }
     $section->addTextBreak(1);
@@ -969,16 +1093,17 @@ destacando as suas necessidades evolutivas.", $paragraphStyle, $paragraphStyleWi
 function add_dia_nascimento_section($section, $dia_natalicio)
 {
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
     if (!empty($dia_natalicio['dia'])) {
-        $section->addText("Dia Natalício: ".$dia_natalicio['dia'], $paragraphStyle3, $paragraphStyleJustify);
+        $section->addText("Dia Natalício: " . $dia_natalicio['dia'], $paragraphStyle3, $paragraphStyleJustify);
     }
 }
-function add_inicial_name_section($section, $letra_inicio_nome){
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true];
+function add_inicial_name_section($section, $letra_inicio_nome)
+{
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
 
 
@@ -1000,22 +1125,24 @@ function add_inicial_name_section($section, $letra_inicio_nome){
 }
 function add_personal_section_grau($section, $grau_ascensao)
 {
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
     $section->addText("Grau de Ascensão: $grau_ascensao", $paragraphStyle3);
 }
-function add_personal_dado_section($section, $ano_pessoal, $mes_pessoal, $dia_pessoal) {
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+function add_personal_dado_section($section, $ano_pessoal, $mes_pessoal, $dia_pessoal)
+{
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
 
-    $section->addText("Ano pessoal - ". $ano_pessoal, $paragraphStyle3);
-    $section->addText("Mês pessoal - ". $mes_pessoal, $paragraphStyle3);
-    $section->addText("Dia pessoal - ". $dia_pessoal, $paragraphStyle3);
+    $section->addText("Ano pessoal - " . $ano_pessoal, $paragraphStyle3);
+    $section->addText("Mês pessoal - " . $mes_pessoal, $paragraphStyle3);
+    $section->addText("Dia pessoal - " . $dia_pessoal, $paragraphStyle3);
 }
-function add_personal_section($section, $ano_pessoal_content, $mes_pessoal_content, $dia_pessoal_content) {
+function add_personal_section($section, $ano_pessoal_content, $mes_pessoal_content, $dia_pessoal_content)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true]; //
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true]; //
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação subtitulo
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formação do dado acf
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formação do dado acf
     $paragraphStyleNumber = ['name' => 'Arial', 'size' => 12, 'bold' => true, 'color' => '000000']; // Formatação do número
     $paragraphStyle4 = ['name' => 'Arial', 'size' => 10, 'color' => 'D2122E', 'italic' => true]; //formatação atenção
 
@@ -1038,8 +1165,9 @@ function add_personal_section($section, $ano_pessoal_content, $mes_pessoal_conte
     $section->addText($dia_pessoal_content, $paragraphStyle3, $paragraphStyleJustify);
     $section->addTextBreak(1);
 }
-function add_challenges_section($section, $desafios) {
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+function add_challenges_section($section, $desafios)
+{
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
     // Concatenar os números dos desafios
     $desafios_numeros = implode(' , ', $desafios);
@@ -1084,7 +1212,7 @@ normal, conforme a lista a seguir:", $paragraphStyle4, $paragraphStyleJustify);
 // função retorna apenas dados
 function add_momentos_decisivos($section, $momento_decisivo_numero)
 {
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
     if (!empty($momento_decisivo_numero)) {
         $section->addText("Momentos Decisivos: " . join(", ", $momento_decisivo_numero), $paragraphStyle3);
@@ -1092,26 +1220,28 @@ function add_momentos_decisivos($section, $momento_decisivo_numero)
         $section->addText("Momentos Decisivos: $momento_decisivo_numero", $paragraphStyle3);
     }
 }
-function add_ange_num_section($section, $anjo){
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+function add_ange_num_section($section, $anjo)
+{
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
     if (!empty($anjo)) {
         $section->addText("Anjo: " . $anjo['numero'], $paragraphStyle3);
     }
 }
 
-function add_angel_section($section, $anjo, $anjo_options) {
+function add_angel_section($section, $anjo, $anjo_options)
+{
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
-    $paragraphStyle6 = ['name' => 'Arial', 'size' => 12, 'color'=> '333333', 'italic' => true]; // formatação dos dados
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
+    $paragraphStyle6 = ['name' => 'Arial', 'size' => 12, 'color' => '333333', 'italic' => true]; // formatação dos dados
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C']; // formatação subtitulo
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=>true];
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
 
     $section->addText("Anjo", $paragraphStyle2);
     $section->addText("Os anjos são frequentemente associados a potenciais ocultos e missões de vida baseados nos números de um nome ou data de nascimento. Cada número revela aspectos espirituais e talentos que podem ser influenciados por energias angelicais. ", $paragraphStyle, $paragraphStyleJustify);
     $section->addTextBreak(1);
 
     if (!empty($anjo)) {
-        $section->addText("Número do Anjo: " . $anjo['numero'] , $paragraphStyle3);
+        $section->addText("Número do Anjo: " . $anjo['numero'], $paragraphStyle3);
         foreach ($anjo_options as $anj) {
             if ($anj['numero_anjo'] == $anjo['numero']) {
                 // Adiciona o nome do anjo
@@ -1119,7 +1249,7 @@ function add_angel_section($section, $anjo, $anjo_options) {
                 // Adiciona a categoria do anjo
                 $section->addText("Categoria do Anjo: " . $anj['categoria_anjo'], $paragraphStyle3);
                 // Adiciona o texto do anjo
-                $section->addText("". $anj['texto_anjo'], $paragraphStyle6,$paragraphStyleJustify );
+                $section->addText("" . $anj['texto_anjo'], $paragraphStyle6, $paragraphStyleJustify);
                 $section->addTextBreak();
                 // Adiciona o horário de preces do anjo
                 $section->addText("Horário de Preces: " . $anj['horario_preces'], $paragraphStyle3);
@@ -1144,13 +1274,14 @@ function add_angel_section($section, $anjo, $anjo_options) {
 }
 
 // função imprimir conteúdo em Download
-function add_karmic_lessons_debts_section($section, $licoes_carmicas, $licao_carmica, $dividas_carmicas, $divida_carmica) {
+function add_karmic_lessons_debts_section($section, $licoes_carmicas, $licao_carmica, $dividas_carmicas, $divida_carmica)
+{
     $paragraphStyleWithSpacing = ['align' => 'both', 'spaceAfter' => 240];
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic'=> true];
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $heading2StyleJustify = ['alignment' => Jc::CENTER];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
 
 
     $section->addText("Lições e Aprendizados", 'Heading2Style', $heading2StyleJustify);
@@ -1197,8 +1328,9 @@ criminosos do passado.", $paragraphStyle, $paragraphStyleWithSpacing, $paragraph
     $section->addTextBreak(1);
 }
 // download apenas dos números
-function add_karmic_number($section, $licoes_carmicas, $dividas_carmicas, $tendencias_ocultas) {
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000']; // formatação dos dados
+function add_karmic_number($section, $licoes_carmicas, $dividas_carmicas, $tendencias_ocultas)
+{
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000']; // formatação dos dados
 
     // Lições Cármicas
     if (!empty($licoes_carmicas)) {
@@ -1227,11 +1359,12 @@ function add_karmic_number($section, $licoes_carmicas, $dividas_carmicas, $tende
 }
 
 // função imprimir conteúdo em Download
-function add_hidden_tendencies_section($section, $tendencias_ocultas, $resultado_tendencias) {
-    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true ];
+function add_hidden_tendencies_section($section, $tendencias_ocultas, $resultado_tendencias)
+{
+    $paragraphStyle = ['name' => 'Arial', 'size' => 10, 'color' => '333333', 'italic' => true];
     $paragraphStyleJustify = ['alignment' => Jc::BOTH];
     $paragraphStyle2 = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '2C0A5C'];
-    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color'=> '000000'];
+    $paragraphStyle3 = ['name' => 'Arial', 'size' => 12, 'color' => '000000'];
 
 
     $section->addText("Tendências Ocultas", $paragraphStyle2);
@@ -1250,7 +1383,7 @@ que pode te perseguir nessa e em outras vidas, caso não seja extinguido.", $par
                     $section->addText($resultado_texto['texto_tendencia_oculta'], $paragraphStyle3, $paragraphStyleJustify);
                     $section->addTextBreak(1);
                 }
-           }
+            }
         }
     } else {
         $section->addText("Nenhuma tendência oculta encontrada.", 'ParagraphStyle');
